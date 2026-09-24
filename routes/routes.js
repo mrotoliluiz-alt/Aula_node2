@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 
 
-// ==================== USUÁRIOS ====================
 
 const UsuariosController = require('../src/controllers/Usuario');
 
@@ -16,8 +15,6 @@ router.patch('/usuarios', UsuariosController.editarUsuario);
 router.delete('/usuarios', UsuariosController.apagarUsuario);
 
 
-// ==================== FAVORITOS SALVOS ====================
-
 const FavoritosSalvosController = require('../src/controllers/favoritos');
 
 router.get('/favoritossalvos', FavoritosSalvosController.listarFavoritosSalvos);
@@ -29,7 +26,6 @@ router.patch('/favoritossalvos', FavoritosSalvosController.editarFavoritosSalvos
 router.delete('/favoritossalvos', FavoritosSalvosController.apagarFavoritosSalvos);
 
 
-// ==================== CAPÍTULOS ====================
 
 const capitulosController = require('../src/controllers/capitulos');
 
@@ -42,7 +38,6 @@ router.put('/capitulos/:id', capitulosController.editarCapitulos);
 router.delete('/capitulos/:id', capitulosController.apagarCapitulos);
 
 
-// ==================== USUÁRIO MISSÃO ====================
 
 const usuarioMissaoController = require('../src/controllers/usuario_missao');
 
@@ -55,7 +50,6 @@ router.put('/usuario-missoes', usuarioMissaoController.editarUsuarioMissao);
 router.delete('/usuario-missoes', usuarioMissaoController.apagarUsuarioMissao);
 
 
-// ==================== OBRAS ====================
 
 const obrasController = require('../src/controllers/obra');
 
@@ -68,7 +62,6 @@ router.put('/obras/:id', obrasController.editarObra);
 router.delete('/obras/:id', obrasController.apagarObra);
 
 
-// ==================== MISSÕES ====================
 
 const missoesController = require('../src/controllers/missoes');
 
@@ -81,7 +74,6 @@ router.put('/missoes', missoesController.editarMissao);
 router.delete('/missoes', missoesController.apagarMissao);
 
 
-// ==================== COMENTÁRIOS ====================
 
 const comentariosController = require('../src/controllers/comentario_obra');
 
@@ -94,7 +86,6 @@ router.put('/comentarios/:id', comentariosController.editarComentario);
 router.delete('/comentarios/:id', comentariosController.apagarComentario);
 
 
-// ==================== CHAT ====================
 
 const chatController = require('../src/controllers/chat');
 
@@ -107,7 +98,6 @@ router.put('/chat/:Chat_ID', chatController.editarChat);
 router.delete('/chat/:Chat_ID', chatController.apagarChat);
 
 
-// ==================== SEGUINDO ====================
 
 const seguindoController = require('../src/controllers/seguindo');
 
@@ -120,6 +110,6 @@ router.put('/seguindo/:Us_ID', seguindoController.editarSeguindo);
 router.delete('/seguindo/:Us_ID', seguindoController.apagarSeguindo);
 
 
-// ==================== EXPORTAÇÃO ====================
+
 
 module.exports = router;
