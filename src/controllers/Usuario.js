@@ -6,26 +6,19 @@ module.exports = {
 
         try {
 
-            const [usuarios] = await db.query(`
-                SELECT
-                    Us_ID,
-                    Us_nome,
-                    Us_email,
-                    Us_biografia,
-                    Us_selo_verificacao,
-                    Us_nivel,
-                    Us_xp_total,
-                    Us_dt_ultimo_acesso,
-                    Us_adm,
-                    Us_Imagem
-                FROM USUARIO
-            `);
+            const sql = `SELECT 
+            Us_ID, US_nome, Us_email, Us_senha, Us_biografia, Us_SV, Us_nivel,
+            Us_XP_total, Us_dt_ultimo_acesso, Us_adm, Us_imagem
+            FROM USUARIO`;
+
+            const [rows] = await db.query(sql);
 
             return response.status(200).json({
 
                 sucesso: true,
                 mensagem: 'Lista de usuários.',
-                dados: usuarios
+                itens: rows.lenght,
+                dados: rows
 
             });
 
@@ -48,52 +41,34 @@ module.exports = {
 
         try {
 
-            const {
-                Us_nome,
-                Us_email,
-                Us_senha,
-                Us_biografia,
-                Us_selo_verificacao,
-                Us_nivel,
-                Us_xp_total,
-                Us_dt_ultimo_acesso,
-                Us_adm,
-                Us_Imagem
-            } = request.body;
+            const {nome, email, senha, biografia,
+selo_verificação, nivel, xp_total, dt_ultimo_acesso, adm, imagem } = request.body;
+            
+            const sql = `
+            INSERT INTO usuario
+            (US_nome, Us_email, Us_senha, Us_biografia, Us_SV, Us_nivel,
+            Us_XP_total, Us_dt_ultimo_acesso, Us_adm, Us_imagem)
+                VALUES
+                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                `;
+               
+                const values = [nome, email, senha, biografia,
+                     selo_verificação, nivel, xp_total, dt_ultimo_acesso, adm, imagem];
 
-            await db.query(`
-                INSERT INTO USUARIO
-                (
-                    Us_nome,
-                    Us_email,
-                    Us_senha,
-                    Us_biografia,
-                    Us_selo_verificacao,
-                    Us_nivel,
-                    Us_xp_total,
-                    Us_dt_ultimo_acesso,
-                    Us_adm,
-                    Us_Imagem
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, [
-                Us_nome,
-                Us_email,
-                Us_senha,
-                Us_biografia,
-                Us_selo_verificacao,
-                Us_nivel,
-                Us_xp_total,
-                Us_dt_ultimo_acesso,
-                Us_adm,
-                Us_Imagem
-            ]);
+                const [result] = await db.query(sql, values);
+
+                const dados ={
+                    id: result.insertId,
+                    nome,
+                    email,
+                    tipo
+                };
 
             return response.status(200).json({
 
                 sucesso: true,
                 mensagem: 'Usuário cadastrado com sucesso.',
-                dados: null
+                dados: dados
 
             });
 
@@ -129,8 +104,10 @@ module.exports = {
                 Us_adm,
                 Us_Imagem
             } = request.body;
-
-            await db.query(`
+            
+            const {id} = request.params;
+                
+            const sql = `
                 UPDATE USUARIO
                 SET
                     Us_nome = ?,
@@ -144,25 +121,33 @@ module.exports = {
                     Us_adm = ?,
                     Us_Imagem = ?
                 WHERE Us_ID = ?
-            `, [
-                Us_nome,
-                Us_email,
-                Us_senha,
-                Us_biografia,
-                Us_selo_verificacao,
-                Us_nivel,
-                Us_xp_total,
-                Us_dt_ultimo_acesso,
-                Us_adm,
-                Us_Imagem,
-                Us_ID
-            ]);
+            `;
+
+            const values = [nome, email, senha, biografia, selo_verificação, nivel, xp_total, 
+                dt_ultimo_acesso, adm, imagem
+            ];
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0){
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: `Usuário ${id} não encontrado!`,
+                    dados: null
+                });
+            }
+
+            const dados = {
+                id,
+                nome,
+                email,
+                tipo
+            };
 
             return response.status(200).json({
 
                 sucesso: true,
-                mensagem: 'Usuário editado com sucesso.',
-                dados: null
+                mensagem: `Usuário ${id} editado com sucesso!`,
+                dados
 
             });
 
@@ -185,21 +170,26 @@ module.exports = {
 
         try {
 
-            const {
-                Us_ID
-            } = request.body;
+            const {id} = request.body;
 
-            await db.query(`
-                DELETE FROM USUARIO
-                WHERE Us_ID = ?
-            `, [
-                Us_ID
-            ]);
+            const sql = `DELETE FROM usuario WHERE Us_ID = ?`;
+
+            const values = [id];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.effectedRows === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: `Usuário ${id} não encontrado!`,
+                    dados: null
+                });
+            }
 
             return response.status(200).json({
 
                 sucesso: true,
-                mensagem: 'Usuário apagado com sucesso.',
+                mensagem: `Usuário ${id} apagado com sucesso.`,
                 dados: null
 
             });

@@ -99,7 +99,7 @@ module.exports = {
                     com_obr_Dtenvio = ?,
                     com_obr_texto = ?,
                     com_obr_moderacao = ?
-                WHERE id_interacao = ?`,
+                WHERE Com_ID = ?`,
                 [
                     Us_ID,
                     Ob_ID,
@@ -135,7 +135,7 @@ module.exports = {
             const { id } = request.params;
 
             const [resultado] = await db.query(
-                'DELETE FROM COMENTARIO_OBRA WHERE id_interacao = ?',
+                'DELETE FROM COMENTARIO_OBRA WHERE Com_ID = ?',
                 [id]
             );
 

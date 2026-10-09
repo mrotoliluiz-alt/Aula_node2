@@ -10,9 +10,9 @@ router.get('/usuarios', UsuariosController.listarUsuarios);
 
 router.post('/usuarios', UsuariosController.cadastrarUsuario);
 
-router.patch('/usuarios', UsuariosController.editarUsuario);
+router.patch('/usuarios/:id', UsuariosController.editarUsuario);
 
-router.delete('/usuarios', UsuariosController.apagarUsuario);
+router.delete('/usuarios/:id', UsuariosController.apagarUsuario);
 
 
 const FavoritosSalvosController = require('../src/controllers/favoritos');
@@ -33,7 +33,7 @@ router.get('/capitulos', capitulosController.listarCapitulos);
 
 router.post('/capitulos', capitulosController.cadastrarCapitulos);
 
-router.put('/capitulos/:id', capitulosController.editarCapitulos);
+router.patch('/capitulos/:id', capitulosController.editarCapitulos);
 
 router.delete('/capitulos/:id', capitulosController.apagarCapitulos);
 
