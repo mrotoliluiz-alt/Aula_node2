@@ -100,7 +100,7 @@ async cadastrarUsuario(request, response) {
         return response.status(500).json({
             sucesso: false,
             mensagem: 'Erro na requisição.',
-            dados: error
+            dados: error.message
         });
     }
 },
@@ -185,12 +185,11 @@ async editarUsuario(request, response) {
 },
 
 
-
     async apagarUsuario(request, response) {
 
         try {
 
-            const {id} = request.body;
+            const {id} = request.params;
 
             const sql = `DELETE FROM usuario WHERE Us_ID = ?`;
 
@@ -198,7 +197,7 @@ async editarUsuario(request, response) {
 
             const [result] = await db.query(sql, values);
 
-            if (result.effectedRows === 0) {
+            if (result.affectedRows === 0) {
                 return response.status(404).json({
                     sucesso: false,
                     mensagem: `Usuário ${id} não encontrado!`,

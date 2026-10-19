@@ -1,3 +1,4 @@
+
 const db = require('../database/connection');
 
 module.exports = {
@@ -6,20 +7,23 @@ module.exports = {
 
         try {
 
-            const [usuarioMissoes] = await db.query(`
+            const sql = `
                 SELECT
                     Us_ID,
                     Ms_ID,
                     Um_Status,
                     Um_Dtconclusao
                 FROM USUARIO_MISSAO
-            `);
+            `;
+
+            const [rows] = await db.query(sql);
 
             return response.status(200).json({
 
                 sucesso: true,
                 mensagem: 'Lista de usuários e missões.',
-                dados: usuarioMissoes
+                itens: rows.length,
+                dados: rows
 
             });
 
@@ -49,27 +53,37 @@ module.exports = {
                 Um_Dtconclusao
             } = request.body;
 
-            await db.query(`
-                INSERT INTO USUARIO_MISSAO
-                (
+            const sql = `
+                INSERT INTO USUARIO_MISSAO (
                     Us_ID,
                     Ms_ID,
                     Um_Status,
                     Um_Dtconclusao
                 )
                 VALUES (?, ?, ?, ?)
-            `, [
+            `;
+
+            const values = [
                 Us_ID,
                 Ms_ID,
                 Um_Status,
                 Um_Dtconclusao
-            ]);
+            ];
 
-            return response.status(200).json({
+            const [result] = await db.query(sql, values);
+
+            const dados = {
+                Us_ID,
+                Ms_ID,
+                Um_Status,
+                Um_Dtconclusao
+            };
+
+            return response.status(201).json({
 
                 sucesso: true,
                 mensagem: 'Cadastro de usuário na missão realizado.',
-                dados: null
+                dados: dados
 
             });
 
@@ -88,52 +102,63 @@ module.exports = {
     },
 
 
-    async editarUsuarioMissao(request, response) {
+   
+async editarUsuarioMissao(request, response) {
+    try {
+        const {
+            Us_ID,
+            Um_Status,
+            Um_Dtconclusao
+        } = request.body;
 
-        try {
+        const { id } = request.params;
 
-            const {
+        const sql = `
+            UPDATE USUARIO_MISSAO
+            SET
+                Um_Status = ?,
+                Um_Dtconclusao = ?
+            WHERE Us_ID = ?
+            AND Ms_ID = ?
+        `;
+
+        const values = [
+            Um_Status,
+            Um_Dtconclusao,
+            Us_ID,
+            id
+        ];
+
+        const [result] = await db.query(sql, values);
+
+        if (result.affectedRows === 0) {
+            return response.status(404).json({
+                sucesso: false,
+                mensagem: 'Vínculo entre usuário e missão não encontrado.',
+                dados: null
+            });
+        }
+
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: `Missão ${id} editada com sucesso!`,
+            dados: {
                 Us_ID,
-                Ms_ID,
+                Ms_ID: id,
                 Um_Status,
                 Um_Dtconclusao
-            } = request.body;
+            }
+        });
 
-            await db.query(`
-                UPDATE USUARIO_MISSAO
-                SET
-                    Um_Status = ?,
-                    Um_Dtconclusao = ?
-                WHERE Us_ID = ?
-                AND Ms_ID = ?
-            `, [
-                Um_Status,
-                Um_Dtconclusao,
-                Us_ID,
-                Ms_ID
-            ]);
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
+    }
+},
 
-            return response.status(200).json({
-
-                sucesso: true,
-                mensagem: 'Edição de usuário na missão realizada.',
-                dados: null
-
-            });
-
-        } catch (error) {
-
-            return response.status(500).json({
-
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-
-            });
-
-        }
-
-    },
 
 
     async apagarUsuarioMissao(request, response) {
@@ -145,14 +170,30 @@ module.exports = {
                 Ms_ID
             } = request.body;
 
-            await db.query(`
+            const sql = `
                 DELETE FROM USUARIO_MISSAO
                 WHERE Us_ID = ?
                 AND Ms_ID = ?
-            `, [
+            `;
+
+            const values = [
                 Us_ID,
                 Ms_ID
-            ]);
+            ];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+
+                return response.status(404).json({
+
+                    sucesso: false,
+                    mensagem: 'Vínculo entre usuário e missão não encontrado.',
+                    dados: null
+
+                });
+
+            }
 
             return response.status(200).json({
 
@@ -176,4 +217,4 @@ module.exports = {
 
     }
 
-}
+};
