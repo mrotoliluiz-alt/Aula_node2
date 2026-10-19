@@ -10,7 +10,7 @@ router.get('/usuarios', UsuariosController.listarUsuarios);
 
 router.post('/usuarios', UsuariosController.cadastrarUsuario);
 
-router.patch('/usuarios/:id', UsuariosController.editarUsuario);
+router.put('/usuarios/:id', UsuariosController.editarUsuario);
 
 router.delete('/usuarios/:id', UsuariosController.apagarUsuario);
 

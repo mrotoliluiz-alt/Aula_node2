@@ -37,133 +37,153 @@ module.exports = {
     },
 
 
-    async cadastrarUsuario(request, response) {
+    
+async cadastrarUsuario(request, response) {
+    try {
+        const {
+            US_nome,
+            Us_email,
+            Us_senha,
+            Us_biografia,
+            Us_SV,
+            Us_nivel,
+            Us_XP_total,
+            Us_dt_ultimo_acesso,
+            Us_adm,
+            Us_imagem
+        } = request.body;
 
-        try {
+       const sql = `
+    INSERT INTO USUARIO (
+        US_nome,
+        Us_email,
+        Us_senha,
+        Us_biografia,
+        Us_SV,
+        Us_nivel,
+        Us_XP_total,
+        Us_dt_ultimo_acesso,
+        Us_adm,
+        Us_imagem
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
 
-            const {nome, email, senha, biografia,
-selo_verificação, nivel, xp_total, dt_ultimo_acesso, adm, imagem } = request.body;
-            
-            const sql = `
-            INSERT INTO usuario
-            (US_nome, Us_email, Us_senha, Us_biografia, Us_SV, Us_nivel,
-            Us_XP_total, Us_dt_ultimo_acesso, Us_adm, Us_imagem)
-                VALUES
-                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                `;
-               
-                const values = [nome, email, senha, biografia,
-                     selo_verificação, nivel, xp_total, dt_ultimo_acesso, adm, imagem];
+        const values = [
+    US_nome,
+    Us_email,
+    Us_senha,
+    Us_biografia,
+    Us_SV,
+    Us_nivel,
+    Us_XP_total,
+    Us_dt_ultimo_acesso,
+    Us_adm,
+    Us_imagem
+];
 
-                const [result] = await db.query(sql, values);
+        const [result] = await db.query(sql, values);
 
-                const dados ={
-                    id: result.insertId,
-                    nome,
-                    email,
-                    tipo
-                };
+        const dados = {
+            id: result.insertId,
+            nome: US_nome,
+            email: Us_email
+        };
 
-            return response.status(200).json({
+        return response.status(201).json({
+            sucesso: true,
+            mensagem: 'Usuário cadastrado com sucesso.',
+            dados: dados
+        });
 
-                sucesso: true,
-                mensagem: 'Usuário cadastrado com sucesso.',
-                dados: dados
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error
+        });
+    }
+},
 
-            });
 
-        } catch (error) {
 
-            return response.status(500).json({
+    
+async editarUsuario(request, response) {
+    try {
+        const {
+            US_nome,
+            Us_email,
+            Us_senha,
+            Us_biografia,
+            Us_SV,
+            Us_nivel,
+            Us_XP_total,
+            Us_dt_ultimo_acesso,
+            Us_adm,
+            Us_imagem
+        } = request.body;
 
+        const { id } = request.params;
+
+        const sql = `
+            UPDATE USUARIO
+            SET
+                US_nome = ?,
+                Us_email = ?,
+                Us_senha = ?,
+                Us_biografia = ?,
+                Us_SV = ?,
+                Us_nivel = ?,
+                Us_XP_total = ?,
+                Us_dt_ultimo_acesso = ?,
+                Us_adm = ?,
+                Us_imagem = ?
+            WHERE Us_ID = ?
+        `;
+
+        const values = [
+            US_nome,
+            Us_email,
+            Us_senha,
+            Us_biografia,
+            Us_SV,
+            Us_nivel,
+            Us_XP_total,
+            Us_dt_ultimo_acesso,
+            Us_adm,
+            Us_imagem,
+            id
+        ];
+
+        const [result] = await db.query(sql, values);
+
+        if (result.affectedRows === 0) {
+            return response.status(404).json({
                 sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-
+                mensagem: `Usuário ${id} não encontrado!`,
+                dados: null
             });
-
         }
 
-    },
-
-
-    async editarUsuario(request, response) {
-
-        try {
-
-            const {
-                Us_ID,
-                Us_nome,
-                Us_email,
-                Us_senha,
-                Us_biografia,
-                Us_selo_verificacao,
-                Us_nivel,
-                Us_xp_total,
-                Us_dt_ultimo_acesso,
-                Us_adm,
-                Us_Imagem
-            } = request.body;
-            
-            const {id} = request.params;
-                
-            const sql = `
-                UPDATE USUARIO
-                SET
-                    Us_nome = ?,
-                    Us_email = ?,
-                    Us_senha = ?,
-                    Us_biografia = ?,
-                    Us_selo_verificacao = ?,
-                    Us_nivel = ?,
-                    Us_xp_total = ?,
-                    Us_dt_ultimo_acesso = ?,
-                    Us_adm = ?,
-                    Us_Imagem = ?
-                WHERE Us_ID = ?
-            `;
-
-            const values = [nome, email, senha, biografia, selo_verificação, nivel, xp_total, 
-                dt_ultimo_acesso, adm, imagem
-            ];
-            const [result] = await db.query(sql, values);
-
-            if (result.affectedRows === 0){
-                return response.status(404).json({
-                    sucesso: false,
-                    mensagem: `Usuário ${id} não encontrado!`,
-                    dados: null
-                });
-            }
-
-            const dados = {
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: `Usuário ${id} editado com sucesso!`,
+            dados: {
                 id,
-                nome,
-                email,
-                tipo
-            };
+                nome: US_nome,
+                email: Us_email
+            }
+        });
 
-            return response.status(200).json({
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
+    }
+},
 
-                sucesso: true,
-                mensagem: `Usuário ${id} editado com sucesso!`,
-                dados
-
-            });
-
-        } catch (error) {
-
-            return response.status(500).json({
-
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-
-            });
-
-        }
-
-    },
 
 
     async apagarUsuario(request, response) {
