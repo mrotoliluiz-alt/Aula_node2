@@ -1,34 +1,47 @@
+
 const db = require('../database/connection');
 
 module.exports = {
 
-    // Listar seguidores/seguidos
     async listarSeguindo(request, response) {
+
         try {
 
-            const [resultados] = await db.query(
-                'SELECT * FROM SEGUINDO'
-            );
+            const sql = `
+                SELECT
+                    Us_ID,
+                    Seguindo
+                FROM SEGUINDO
+            `;
+
+            const [rows] = await db.query(sql);
 
             return response.status(200).json({
+
                 sucesso: true,
                 mensagem: 'Lista de usuários seguidos.',
-                dados: resultados
+                itens: rows.length,
+                dados: rows
+
             });
 
         } catch (error) {
 
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
 
         }
+
     },
 
-    // Cadastrar seguindo
+
     async cadastrarSeguindo(request, response) {
+
         try {
 
             const {
@@ -36,97 +49,151 @@ module.exports = {
                 Seguindo
             } = request.body;
 
-            const [resultados] = await db.query(
-                `INSERT INTO SEGUINDO
-                (Us_ID, Seguindo)
-                VALUES (?, ?)`,
-                [
+            const sql = `
+                INSERT INTO SEGUINDO (
                     Us_ID,
                     Seguindo
-                ]
-            );
+                )
+                VALUES (?, ?)
+            `;
+
+            const values = [
+                Us_ID,
+                Seguindo
+            ];
+
+            const [result] = await db.query(sql, values);
+
+            const dados = {
+                Us_ID,
+                Seguindo
+            };
 
             return response.status(201).json({
+
                 sucesso: true,
                 mensagem: 'Usuário seguido com sucesso.',
-                dados: resultados
+                dados: dados
+
             });
 
         } catch (error) {
 
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
 
         }
+
     },
 
-    // Editar seguindo
-    async editarSeguindo(request, response) {
-        try {
 
-            const { Us_ID } = request.params;
+   
 
-            const {
+
+
+async editarSeguindo(request, response) {
+    try {
+        const { Us_ID: id } = request.params;
+        const { Us_ID, Seguindo } = request.body;
+
+        const sql = `
+            UPDATE SEGUINDO
+            SET Seguindo = ?
+            WHERE Us_ID = ?
+            AND Seguindo = ?
+        `;
+
+        const values = [
+            Seguindo,
+            Us_ID,
+            id
+        ];
+
+        const [result] = await db.query(sql, values);
+
+        if (result.affectedRows === 0) {
+            return response.status(404).json({
+                sucesso: false,
+                mensagem: 'Vínculo não encontrado.',
+                dados: null
+            });
+        }
+
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: 'Seguindo editado com sucesso.',
+            dados: {
+                Us_ID,
                 Seguindo
-            } = request.body;
+            }
+        });
 
-            const [resultados] = await db.query(
-                `UPDATE SEGUINDO
-                SET Seguindo = ?
-                WHERE Us_ID = ?`,
-                [
-                    Seguindo,
-                    Us_ID
-                ]
-            );
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
+    }
+},
 
-            return response.status(200).json({
-                sucesso: true,
-                mensagem: 'Seguindo editado com sucesso.',
-                dados: resultados
-            });
 
-        } catch (error) {
 
-            return response.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-            });
 
-        }
-    },
 
-    // Apagar seguindo
+
     async apagarSeguindo(request, response) {
+
         try {
 
-            const { Us_ID } = request.params;
+            const { id } = request.params;
 
-            const [resultados] = await db.query(
-                `DELETE FROM SEGUINDO
-                WHERE Us_ID = ?`,
-                [Us_ID]
-            );
+            const sql = `
+                DELETE FROM SEGUINDO
+                WHERE Us_ID = ?
+            `;
+
+            const values = [id];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+
+                return response.status(404).json({
+
+                    sucesso: false,
+                    mensagem: `Registro do usuário ${id} não encontrado.`,
+                    dados: null
+
+                });
+
+            }
 
             return response.status(200).json({
+
                 sucesso: true,
-                mensagem: 'Seguindo apagado com sucesso.',
-                dados: resultados
+                mensagem: `Registro do usuário ${id} apagado com sucesso.`,
+                dados: null
+
             });
 
         } catch (error) {
 
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
 
         }
+
     }
 
 };

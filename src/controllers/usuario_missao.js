@@ -161,60 +161,42 @@ async editarUsuarioMissao(request, response) {
 
 
 
-    async apagarUsuarioMissao(request, response) {
 
-        try {
+async apagarUsuarioMissao(request, response) {
+    try {
+        const { id } = request.params;
 
-            const {
-                Us_ID,
-                Ms_ID
-            } = request.body;
+        const sql = `
+            DELETE FROM USUARIO_MISSAO
+            WHERE Ms_ID = ?
+        `;
 
-            const sql = `
-                DELETE FROM USUARIO_MISSAO
-                WHERE Us_ID = ?
-                AND Ms_ID = ?
-            `;
+        const values = [id];
 
-            const values = [
-                Us_ID,
-                Ms_ID
-            ];
+        const [result] = await db.query(sql, values);
 
-            const [result] = await db.query(sql, values);
-
-            if (result.affectedRows === 0) {
-
-                return response.status(404).json({
-
-                    sucesso: false,
-                    mensagem: 'Vínculo entre usuário e missão não encontrado.',
-                    dados: null
-
-                });
-
-            }
-
-            return response.status(200).json({
-
-                sucesso: true,
-                mensagem: 'Usuário removido da missão.',
-                dados: null
-
-            });
-
-        } catch (error) {
-
-            return response.status(500).json({
-
+        if (result.affectedRows === 0) {
+            return response.status(404).json({
                 sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-
+                mensagem: `Missão ${id} não encontrada.`,
+                dados: null
             });
-
         }
 
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: `Missão ${id} removida com sucesso.`,
+            dados: null
+        });
+
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
     }
+}
+
 
 };
