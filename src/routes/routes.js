@@ -69,9 +69,9 @@ router.get('/missoes', missoesController.listarMissoes);
 
 router.post('/missoes', missoesController.cadastrarMissao);
 
-router.put('/missoes', missoesController.editarMissao);
+router.put('/missoes/:id', missoesController.editarMissao);
 
-router.delete('/missoes', missoesController.apagarMissao);
+router.delete('/missoes/:id', missoesController.apagarMissao);
 
 
 

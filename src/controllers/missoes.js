@@ -1,3 +1,4 @@
+
 const db = require('../database/connection');
 
 module.exports = {
@@ -6,21 +7,24 @@ module.exports = {
 
         try {
 
-            const [missoes] = await db.query(`
+            const sql = `
                 SELECT
                     Ms_ID,
                     Ms_titulo,
                     Ms_descricao,
-                    Ms_recompensasXP,
+                    Ms_recompensaXP,
                     Ms_tipo
                 FROM MISSOES
-            `);
+            `;
+
+            const [rows] = await db.query(sql);
 
             return response.status(200).json({
 
                 sucesso: true,
                 mensagem: 'Lista de missões.',
-                dados: missoes
+                itens: rows.length,
+                dados: rows
 
             });
 
@@ -46,31 +50,42 @@ module.exports = {
             const {
                 Ms_titulo,
                 Ms_descricao,
-                Ms_recompensasXP,
+                Ms_recompensaXP,
                 Ms_tipo
             } = request.body;
 
-            await db.query(`
-                INSERT INTO MISSOES
-                (
+            const sql = `
+                INSERT INTO MISSOES (
                     Ms_titulo,
                     Ms_descricao,
-                    Ms_recompensasXP,
+                    Ms_recompensaXP,
                     Ms_tipo
                 )
                 VALUES (?, ?, ?, ?)
-            `, [
+            `;
+
+            const values = [
                 Ms_titulo,
                 Ms_descricao,
-                Ms_recompensasXP,
+                Ms_recompensaXP,
                 Ms_tipo
-            ]);
+            ];
 
-            return response.status(200).json({
+            const [result] = await db.query(sql, values);
+
+            const dados = {
+                Ms_ID: result.insertId,
+                Ms_titulo,
+                Ms_descricao,
+                Ms_recompensaXP,
+                Ms_tipo
+            };
+
+            return response.status(201).json({
 
                 sucesso: true,
                 mensagem: 'Missão cadastrada com sucesso.',
-                dados: null
+                dados: dados
 
             });
 
@@ -94,34 +109,57 @@ module.exports = {
         try {
 
             const {
-                Ms_ID,
                 Ms_titulo,
                 Ms_descricao,
-                Ms_recompensasXP,
+                Ms_recompensaXP,
                 Ms_tipo
             } = request.body;
 
-            await db.query(`
+            const { id } = request.params;
+
+            const sql = `
                 UPDATE MISSOES
                 SET
                     Ms_titulo = ?,
                     Ms_descricao = ?,
-                    Ms_recompensasXP = ?,
+                    Ms_recompensaXP = ?,
                     Ms_tipo = ?
                 WHERE Ms_ID = ?
-            `, [
+            `;
+
+            const values = [
                 Ms_titulo,
                 Ms_descricao,
-                Ms_recompensasXP,
+                Ms_recompensaXP,
                 Ms_tipo,
-                Ms_ID
-            ]);
+                id
+            ];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+
+                return response.status(404).json({
+
+                    sucesso: false,
+                    mensagem: `Missão ${id} não encontrada ou nenhum dado foi alterado.`,
+                    dados: null
+
+                });
+
+            }
 
             return response.status(200).json({
 
                 sucesso: true,
-                mensagem: 'Missão editada com sucesso.',
-                dados: null
+                mensagem: `Missão ${id} editada com sucesso!`,
+                dados: {
+                    Ms_ID: Number(id),
+                    Ms_titulo,
+                    Ms_descricao,
+                    Ms_recompensaXP,
+                    Ms_tipo
+                }
 
             });
 
@@ -144,21 +182,33 @@ module.exports = {
 
         try {
 
-            const {
-                Ms_ID
-            } = request.body;
+            const { id } = request.params;
 
-            await db.query(`
+            const sql = `
                 DELETE FROM MISSOES
                 WHERE Ms_ID = ?
-            `, [
-                Ms_ID
-            ]);
+            `;
+
+            const values = [id];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+
+                return response.status(404).json({
+
+                    sucesso: false,
+                    mensagem: `Missão ${id} não encontrada.`,
+                    dados: null
+
+                });
+
+            }
 
             return response.status(200).json({
 
                 sucesso: true,
-                mensagem: 'Missão apagada com sucesso.',
+                mensagem: `Missão ${id} apagada com sucesso.`,
                 dados: null
 
             });
@@ -177,4 +227,4 @@ module.exports = {
 
     }
 
-}
+};
