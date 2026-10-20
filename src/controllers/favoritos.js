@@ -3,10 +3,18 @@ const db = require('../database/connection');
 module.exports = {
   async listarFavoritosSalvos(request, response) {
     try {
+
+      const sql = `SELECT 
+           Ob_ID, Us_ID, Fav_status, Ob_PagAtual
+            FROM FAVORITOS_SALVOS`;
+
+          const [rows] = await db.query(sql);
+
       return response.status(200).json({
         sucesso: true,
         mensagem: 'Lista de favoritos salvos.',
-        dados: null
+        itens: rows.lenght,
+        dados: rows
       });
     } catch (error) {
       return response.status(500).json({
@@ -19,11 +27,46 @@ module.exports = {
 
   async cadastrarFavoritosSalvos(request, response) {
     try {
+
+      const {
+            Us_ID,
+            Fav_status,
+            Ob_PagAtual
+        } = request.body;
+
+        const sql = `
+        INSERT INTO USUARIO (
+            Us_ID,
+            Fav_status,
+            Ob_PagAtual
+        )
+        VALUES (?, ?, ?)
+    `;
+
+    const values = [
+      Us_ID,
+      Fav_status,
+      Ob_PagAtual
+    ];
+
+    const [result] = await db.query(sql, values);
+
+        const dados = {
+            id: result.insertId,
+           Fav_status,
+           Ob_PagAtual
+        };
+
+
+
+
       return response.status(200).json({
         sucesso: true,
         mensagem: 'Cadastro de favoritos salvos.',
-        dados: null
+        dados: dados
       });
+
+      
     } catch (error) {
       return response.status(500).json({
         sucesso: false,
