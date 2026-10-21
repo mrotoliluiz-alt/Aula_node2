@@ -21,9 +21,9 @@ router.get('/favoritossalvos', FavoritosSalvosController.listarFavoritosSalvos);
 
 router.post('/favoritossalvos', FavoritosSalvosController.cadastrarFavoritosSalvos);
 
-router.put('/favoritossalvos', FavoritosSalvosController.editarFavoritosSalvos);
+router.put('/favoritossalvos/:id', FavoritosSalvosController.editarFavoritosSalvos);
 
-router.delete('/favoritossalvos', FavoritosSalvosController.apagarFavoritosSalvos);
+router.delete('/favoritossalvos/:id', FavoritosSalvosController.apagarFavoritosSalvos);
 
 
 

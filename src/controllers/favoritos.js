@@ -81,29 +81,88 @@ async cadastrarFavoritosSalvos(request, response) {
 },
 
 
-  async editarFavoritosSalvos(request, response) {
+ 
+async editarFavoritosSalvos(request, response) {
     try {
-      return response.status(200).json({
-        sucesso: true,
-        mensagem: 'Editar favoritos salvos.',
-        dados: null
-      });
+        const {
+            Us_ID,
+            Fav_status,
+            Ob_PagAtual
+        } = request.body;
+
+        const { id } = request.params;
+
+        const sql = `
+            UPDATE FAVORITOS_SALVOS
+            SET
+                Fav_status = ?,
+                Ob_PagAtual = ?
+            WHERE Ob_ID = ? AND Us_ID = ?
+        `;
+
+        const values = [
+            Fav_status,
+            Ob_PagAtual,
+            id,
+            Us_ID
+        ];
+
+        const [result] = await db.query(sql, values);
+
+        if (result.affectedRows === 0) {
+            return response.status(404).json({
+                sucesso: false,
+                mensagem: `Favorito da obra ${id} não encontrado para este usuário!`,
+                dados: null
+            });
+        }
+
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: `Favorito da obra ${id} editado com sucesso.`,
+            dados: {
+                id,
+                Us_ID,
+                Fav_status,
+                Ob_PagAtual
+            }
+        });
+
     } catch (error) {
-      return response.status(500).json({
-        sucesso: false,
-        mensagem: 'Erro na requisição.',
-        dados: error.message
-      });
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
     }
-  },
+},
+
 
   async apagarFavoritosSalvos(request, response) {
     try {
+
+      const {id} = request.params;
+
+            const sql = `DELETE FROM FAVORITOS_SALVOS WHERE Us_ID = ? and Ob_ID`;
+
+            const values = [id];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: ` Obra Favorita ${id} não encontrada!`,
+                    dados: null
+                });
+            }
+
       return response.status(200).json({
         sucesso: true,
-        mensagem: 'Apagar favoritos salvos.',
+        mensagem: `Obra Favorita ${id} apagada com sucesso.`,
         dados: null
       });
+
     } catch (error) {
       return response.status(500).json({
         sucesso: false,
