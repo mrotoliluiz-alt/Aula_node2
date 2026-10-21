@@ -25,56 +25,61 @@ module.exports = {
     }
   },
 
-  async cadastrarFavoritosSalvos(request, response) {
+ 
+async cadastrarFavoritosSalvos(request, response) {
     try {
 
-      const {
+        const {
             Us_ID,
+            Ob_ID,
             Fav_status,
             Ob_PagAtual
         } = request.body;
 
         const sql = `
-        INSERT INTO USUARIO (
+            INSERT INTO FAVORITOS_SALVOS (
+                Us_ID,
+                Ob_ID,
+                Fav_status,
+                Ob_PagAtual
+            )
+            VALUES (?, ?, ?, ?)
+        `;
+
+        const values = [
             Us_ID,
+            Ob_ID,
             Fav_status,
             Ob_PagAtual
-        )
-        VALUES (?, ?, ?)
-    `;
+        ];
 
-    const values = [
-      Us_ID,
-      Fav_status,
-      Ob_PagAtual
-    ];
-
-    const [result] = await db.query(sql, values);
+        const [result] = await db.query(sql, values);
 
         const dados = {
             id: result.insertId,
-           Fav_status,
-           Ob_PagAtual
+            Us_ID,
+            Ob_ID,
+            Fav_status,
+            Ob_PagAtual
         };
 
+        return response.status(201).json({
+            sucesso: true,
+            mensagem: 'Favorito salvo com sucesso.',
+            dados: dados
+        });
 
-
-
-      return response.status(200).json({
-        sucesso: true,
-        mensagem: 'Cadastro de favoritos salvos.',
-        dados: dados
-      });
-
-      
     } catch (error) {
-      return response.status(500).json({
-        sucesso: false,
-        mensagem: 'Erro na requisição.',
-        dados: error.message
-      });
+
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
+
     }
-  },
+},
+
 
   async editarFavoritosSalvos(request, response) {
     try {
