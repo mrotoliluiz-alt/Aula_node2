@@ -225,6 +225,52 @@ async editarUsuario(request, response) {
 
         }
 
-    }
+    },
+
+    async login(request, response){
+        try{
+            const {email, senha } = request.query;
+
+            const sql = `SELECT
+            Us_ID, Us_nome, Us_adm, Us_imagem
+            FROM
+            usuario
+            WHERE
+            Us_email = ? AND Us_senha = ?;
+            `;
+
+            const values = [email, senha];
+
+            const [rows] = await db.query(sql, values);
+            const nItens = rows.length;
+
+            if (nItens < 1){
+                return response.status(403).json({
+                    sucesso: false,
+                    mensagem: 'Login ou senha inválidos.',
+                    dados: null,
+                });
+            }
+
+            const dados = rows.map( usuario => ({
+                id: usuario.Us_ID,
+                nome: usuario.Us_nome,
+                tipo: usuario.Us_adm,
+                imagem: usuario.Us_imagem
+            }));
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Login efetuado com sucesso',
+                dados
+            });           
+        }catch (error) {
+                return response.status(500).json({
+                    sucesso: false,
+                    mensagem: 'Erro na requisição.',
+                    dados: error.message
+                })
+            }
+    },
 
 }

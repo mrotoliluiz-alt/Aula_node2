@@ -14,6 +14,8 @@ router.put('/usuarios/:id', UsuariosController.editarUsuario);
 
 router.delete('/usuarios/:id', UsuariosController.apagarUsuario);
 
+router.get('/login', UsuariosController.login); // query
+
 
 const FavoritosSalvosController = require('../controllers/favoritos');
 

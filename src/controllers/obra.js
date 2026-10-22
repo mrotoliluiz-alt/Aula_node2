@@ -153,6 +153,27 @@ module.exports = {
             });
 
         }
+    },
+
+    async buscaGenero(request, response) {
+        try {
+            const {genero} = request.query;
+
+            const Ob_genero = genero ? `%${genero}%` : `%`;
+            const sql = `
+            SELECT
+                Ob_ID, Ob_titulo, Ob_sinopse, Ob_status,
+                Ob_imagem
+            FROM
+                obra
+            WHERE
+                Ob_genero like ?;
+            `;
+
+            const values = [Ob_genero];
+        } catch (error) {
+
+        }
     }
 
 };
