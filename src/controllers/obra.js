@@ -5,24 +5,36 @@ module.exports = {
     // LISTAR OBRAS
     async listarObras(request, response) {
         try {
+            const {titulo} = request.query;
 
-            const [resultado] = await db.query(
-                'SELECT * FROM OBRA'
-            );
+            const Ob_titulo = titulo ? `%${titulo}%` : `%`;
+            const sql = `
+            SELECT
+                Ob_ID, Ob_titulo, Ob_sinopse, Ob_status,
+                Ob_imagem
+            FROM
+                obra
+            WHERE
+                Ob_titulo like ?;
+            `;
+
+            const values = [Ob_titulo];
+
+            const [rows] = await db.query(sql, values);
+            const nItens = rows.length;
 
             return response.status(200).json({
                 sucesso: true,
-                mensagem: 'Lista de obras.',
-                dados: resultado
+                mensagem: `Livro procurado com sucesso`,
+                nItens,
+                dados: rows
             });
-
         } catch (error) {
-
             return response.status(500).json({
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
-            });
+            })
 
         }
     },
@@ -190,41 +202,5 @@ module.exports = {
 
         }
     },
-
-    async buscaTitulo(request, response) {
-        try {
-            const {titulo} = request.query;
-
-            const Ob_titulo = titulo ? `%${titulo}%` : `%`;
-            const sql = `
-            SELECT
-                Ob_ID, Ob_titulo, Ob_sinopse, Ob_status,
-                Ob_imagem
-            FROM
-                obra
-            WHERE
-                Ob_titulo like ?;
-            `;
-
-            const values = [Ob_titulo];
-
-            const [rows] = await db.query(sql, values);
-            const nItens = rows.length;
-
-            return response.status(200).json({
-                sucesso: true,
-                mensagem: `Livros por genero`,
-                nItens,
-                dados: rows
-            });
-        } catch (error) {
-            return response.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-            })
-
-        }
-    }
 
 };

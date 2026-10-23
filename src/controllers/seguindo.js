@@ -7,30 +7,49 @@ module.exports = {
 
         try {
 
-            const sql = `
-                SELECT
-                    Us_ID,
-                    Seguindo
-                FROM SEGUINDO
-            `;
+            const {Us_ID, seguindo} = request.query;
 
-            const [rows] = await db.query(sql);
+            if (!Us_ID) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'O (id do usuario) é obrigatório para ver quem ele está seguindo.',
+                });
+            }
+
+            const Seguindo = seguindo ? `%${seguindo}%` :`%`;
+
+            //Consulta sql 2 parametros
+            const SQL_LISTAR_SEGUIDORES = `
+            SELECT
+                Us_ID, Seguindo
+            FROM
+                seguindo
+            WHERE
+                Us_ID = ? AND Seguindo LIKE ?;`;
+
+            const values = [Us_ID.toUpperCase(), Seguindo];
+            const [rows] = await db.query(SQL_LISTAR_SEGUIDORES, values);
+
+            const dados = rows.map(seguidor => ({
+                Us_ID: seguidor.Us_ID,
+                Seguindo: seguidor.Seguindo
+            }));
 
             return response.status(200).json({
-
-                sucesso: true,
-                mensagem: 'Lista de usuários seguidos.',
-                itens: rows.length,
-                dados: rows
-
+                sucesso:true,
+                mensagem: dados.length > 0
+                    ? 'Lista de seguidores encontrados com sucesso.'
+                    : 'Nenhum seguidor encontrado com os critérios fornecidos.',
+                nItens: dados.length,
+                dados
             });
 
         } catch (error) {
-
+            console.error('Erro na requisição', error);
             return response.status(500).json({
 
                 sucesso: false,
-                mensagem: 'Erro na requisição.',
+                mensagem: 'Erro interno na requisição.',
                 dados: error.message
 
             });
