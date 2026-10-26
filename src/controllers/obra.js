@@ -5,7 +5,8 @@ module.exports = {
     // LISTAR OBRAS
     async listarObras(request, response) {
         try {
-            const {titulo} = request.query;
+            const { titulo, page = 1, limit = 7, disponivel = 1} = request.query;
+            const offset = (parseInt(page) - 1) * parseInt(limit); 
 
             const Ob_titulo = titulo ? `%${titulo}%` : `%`;
             const sql = `
@@ -15,8 +16,14 @@ module.exports = {
             FROM
                 obra
             WHERE
-                Ob_titulo like ?;
+                Ob_titulo like ?
+            ${id ? 'AND Ob_ID = ?':''}
+            LIMIT ?, ?
             `;
+
+            const listValues = id
+                ? [disponivel, `%${titulo ?? ''}%`, id]
+                : [disponivel];
 
             const values = [Ob_titulo];
 
