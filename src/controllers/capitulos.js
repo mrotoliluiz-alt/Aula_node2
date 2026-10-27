@@ -4,9 +4,18 @@ module.exports = {
   async listarCapitulos(request, response) {
     try {
 
-      const sql = `SELECT 
-            Cap_ID, Ob_ID, Cap_ordem, Cap_titulo, Cap_conteudo
-            FROM CAPITULO`;
+      const sql = `    
+      SELECT 
+        c.Cap_ID,
+        o.Ob_titulo AS Titulo_Obra,
+        c.Cap_ordem AS Ordem,
+        c.Cap_titulo AS Titulo_Capitulo,
+        c.Cap_conteudo AS Conteudo
+    FROM CAPITULO c
+    INNER JOIN OBRA o 
+        ON c.Ob_ID = o.Ob_ID
+    ORDER BY o.Ob_titulo, c.Cap_ordem;
+    `;
 
       const [rows] = await db.query(sql);
 

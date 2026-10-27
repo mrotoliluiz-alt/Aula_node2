@@ -24,6 +24,8 @@ module.exports = {
                 OBRA.Ob_titulo AS Obra,
                 USUARIO.Us_nome AS Autor,
                 OBRA.Ob_genero AS Genero,
+                OBRA.Ob_imagem AS Imagem,
+                OBRA.Ob_sinopse AS Sinopse,
                 COUNT(CAPITULO.Cap_ID) AS Quantidade_Capitulos
             FROM OBRA
             INNER JOIN USUARIO
@@ -47,12 +49,14 @@ module.exports = {
 
             const [obras] = await db.query( listQuery, listValues);
 
-            const dados = obras.map(obras => ({
-                id: obras.Ob_ID,
-                titulo: obras.Ob_titulo,
-                sinopse: obras.Ob_sinopse,
-                status: obras.Ob_status,
-                imagem: obras.Ob_imagem               
+            const dados = obras.map(obra => ({
+                id: obra.Ob_ID,
+                titulo: obra.Obra,
+                autor: obra.Autor,
+                sinopse: obra.Sinopse,
+                imagem: obra.Imagem,
+                genero: obra.Genero,
+                capitulos: obra.Quantidade_Capitulos               
             }))
 
             response.setHeader('X-Total-Count', total);
@@ -237,5 +241,43 @@ module.exports = {
 
         }
     },
+
+    async listarQntCapitulo(request, response) {
+        try {
+            const {id, titulo} = request.query;
+
+            const Ob_ID = id ? `%${id}%` : `%`;
+            const sql = `
+            SELECT
+                O.Ob_ID,
+                O.Ob_titulo AS Obra,
+                COUNT(C.Cap_ID) AS Quantidade_Capitulos
+            FROM OBRA O
+            LEFT JOIN CAPITULO C
+                ON O.Ob_ID = C.Ob_ID
+            GROUP BY O.Ob_ID, O.Ob_titulo
+            ORDER BY O.Ob_ID
+            `;
+
+            const values = [`%${id ?? ''}%`, `%${titulo ?? ''}%` ];
+
+            const [rows] = await db.query(sql, values);
+            const nItens = rows.length;
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: `Livros por genero`,
+                nItens,
+                dados: rows
+            });
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            })
+
+        }
+    }
 
 };
