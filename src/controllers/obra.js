@@ -244,9 +244,10 @@ module.exports = {
 
     async listarQntCapitulo(request, response) {
         try {
-            const {id, titulo} = request.query;
+            const {id, Obra} = request.query;
 
-            const Ob_ID = id ? `%${id}%` : `%`;
+            
+
             const sql = `
             SELECT
                 O.Ob_ID,
@@ -255,20 +256,33 @@ module.exports = {
             FROM OBRA O
             LEFT JOIN CAPITULO C
                 ON O.Ob_ID = C.Ob_ID
+            WHERE
+            O.Ob_titulo LIKE ? 
+            ${id ? ' AND O.Ob_ID = ?' : ''}
             GROUP BY O.Ob_ID, O.Ob_titulo
             ORDER BY O.Ob_ID
             `;
 
-            const values = [`%${id ?? ''}%`, `%${titulo ?? ''}%` ];
+            const values = id 
+            [`%${Obra ?? ''}%`, id];
+        
 
             const [rows] = await db.query(sql, values);
+
+            const dados = rows.map(Obra => ({
+                id: Obra.Ob_ID,
+                titulo: Obra.Obra,
+                Capitulos:Obra.Quantidade_Capitulos
+            }));
             const nItens = rows.length;
 
             return response.status(200).json({
                 sucesso: true,
-                mensagem: `Livros por genero`,
+                mensagem: 'lista de capitulos',//dados.length > 0 
+                //?'capitulos da obras encontrados'
+                //: 'Nenhum capitulo encontrado',
                 nItens,
-                dados: rows
+                dados
             });
         } catch (error) {
             return response.status(500).json({

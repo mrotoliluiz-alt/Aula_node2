@@ -65,6 +65,9 @@ router.delete('/obras/:id', obrasController.apagarObra);
 
 router.get('/genero', obrasController.listarGeneros);
 
+router.get('/capitulos_obra', obrasController.listarQntCapitulo);
+
+
 
 const missoesController = require('../controllers/missoes');
 
