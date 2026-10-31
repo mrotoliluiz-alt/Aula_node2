@@ -225,6 +225,182 @@ module.exports = {
 
         }
 
+    },
+
+     async listarMissoesRecompensa(request, response) {
+
+        try {
+
+            const sql = `
+                SELECT
+                    Ms_ID,
+                    Ms_titulo,
+                    Ms_descricao,
+                    Ms_recompensaXP,
+                    Ms_tipo
+                FROM MISSOES
+                ORDER BY Ms_recompensaXP DESC;
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+
+                sucesso: true,
+                mensagem: 'Lista de missões ordenadas por recompensa.',
+                itens: rows.length,
+                dados: rows
+
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+
+            });
+
+        }
+
+    },
+
+    // CONSULTA 2 — PESQUISAR MISSÕES PELO TÍTULO
+    async pesquisarMissoes(request, response) {
+
+        try {
+
+            const { titulo } = request.query;
+
+            const sql = `
+                SELECT
+                    Ms_ID,
+                    Ms_titulo,
+                    Ms_descricao,
+                    Ms_recompensaXP,
+                    Ms_tipo
+                FROM MISSOES
+                WHERE Ms_titulo LIKE ?;
+            `;
+
+            const values = [`%${titulo ?? ''}%`];
+
+            const [rows] = await db.query(sql, values);
+
+            return response.status(200).json({
+
+                sucesso: true,
+                mensagem: 'Pesquisa de missões.',
+                itens: rows.length,
+                dados: rows
+
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+
+            });
+
+        }
+
+    },
+
+    // CONSULTA 3 — LISTAR MISSÕES POR TIPO
+    async listarMissoesTipo(request, response) {
+
+        try {
+
+            const { tipo } = request.params;
+
+            const sql = `
+                SELECT
+                    Ms_ID,
+                    Ms_titulo,
+                    Ms_descricao,
+                    Ms_recompensaXP,
+                    Ms_tipo
+                FROM MISSOES
+                WHERE Ms_tipo = ?;
+            `;
+
+            const values = [tipo];
+
+            const [rows] = await db.query(sql, values);
+
+            return response.status(200).json({
+
+                sucesso: true,
+                mensagem: 'Lista de missões por tipo.',
+                itens: rows.length,
+                dados: rows
+
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+
+            });
+
+        }
+
+    },
+
+    // CONSULTA 4 — MISSÕES DOS USUÁRIOS COM STATUS E DATA DE CONCLUSÃO
+    async listarMissoesUsuarios(request, response) {
+
+        try {
+
+            const sql = `
+                SELECT
+                    U.Us_nome AS Usuario,
+                    M.Ms_titulo AS Missao,
+                    M.Ms_tipo AS Tipo,
+                    M.Ms_recompensaXP AS Recompensa_XP,
+                    UM.Um_Status AS Status,
+                    UM.Um_Dtconclusao AS Data_Conclusao
+                FROM USUARIO_MISSAO UM
+                INNER JOIN USUARIO U
+                    ON UM.Us_ID = U.Us_ID
+                INNER JOIN MISSOES M
+                    ON UM.Ms_ID = M.Ms_ID;
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+
+                sucesso: true,
+                mensagem: 'Lista de missões dos usuários.',
+                itens: rows.length,
+                dados: rows
+
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+
+            });
+
+        }
+
     }
+
 
 };

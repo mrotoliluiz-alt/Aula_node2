@@ -27,6 +27,14 @@ router.put('/favoritossalvos/:id', FavoritosSalvosController.editarFavoritosSalv
 
 router.delete('/favoritossalvos/:id', FavoritosSalvosController.apagarFavoritosSalvos);
 
+router.get('/favoritos/detalhados', FavoritosSalvosController.listarFavoritosDetalhados);
+
+router.get('/favoritos/usuario/:id', FavoritosSalvosController.listarFavoritosUsuario);
+
+router.get('/favoritos/obra/:id/usuarios', FavoritosSalvosController.listarUsuariosFavoritaramObra);
+
+router.get('/favoritos/status/:status', FavoritosSalvosController.listarFavoritosStatus);
+
 
 
 const capitulosController = require('../controllers/capitulos');
@@ -39,6 +47,10 @@ router.put('/capitulos/:id', capitulosController.editarCapitulos);
 
 router.delete('/capitulos/:id', capitulosController.apagarCapitulos);
 
+router.get('/capitulos/obra/:id', capitulosController.listarCapitulosObra);
+
+router.get('/capitulos/quantidade', capitulosController.listarQntCapitulo);
+
 
 
 const usuarioMissaoController = require('../controllers/usuario_missao');
@@ -50,6 +62,8 @@ router.post('/usuario-missoes', usuarioMissaoController.cadastrarUsuarioMissao);
 router.put('/usuario-missoes/:id', usuarioMissaoController.editarUsuarioMissao);
 
 router.delete('/usuario-missoes/:id', usuarioMissaoController.apagarUsuarioMissao);
+
+
 
 
 
@@ -91,6 +105,14 @@ router.put('/comentarios/:id', comentariosController.editarComentario);
 
 router.delete('/comentarios/:id', comentariosController.apagarComentario);
 
+router.get('/comentarios/detalhados', comentariosController.listarComentariosDetalhados);
+
+router.get('/comentarios/obra/:id', comentariosController.listarComentariosObra);
+
+router.get('/comentarios/usuario/:id', comentariosController.listarComentariosUsuario);
+
+router.get('/comentarios/moderacao/:moderacao', comentariosController.listarComentariosModeracao);
+
 
 
 const chatController = require('../controllers/chat');
@@ -103,6 +125,14 @@ router.put('/chat/:Chat_ID', chatController.editarChat);
 
 router.delete('/chat/:Chat_ID', chatController.apagarChat);
 
+router.get('/chat/usuarios', chatController.listarChatUsuarios);
+
+router.get('/chat/conversa/:id', chatController.listarConversa);
+
+router.get('/chat/enviadas/:id', chatController.listarMensagensEnviadas);
+
+router.get('/chat/recebidas/:id', chatController.listarMensagensRecebidas);
+
 
 
 const seguindoController = require('../controllers/seguindo');
@@ -113,7 +143,16 @@ router.post('/seguindo', seguindoController.cadastrarSeguindo);
 
 router.put('/seguindo/:Us_ID', seguindoController.editarSeguindo);
 
-router.delete('/seguindo/:Us_ID', seguindoController.apagarSeguindo);
+router.delete('/seguindo/:id/:seguindo', seguindoController.apagarSeguindo);
+
+router.get('/seguindo/detalhado/:id', seguindoController.listarSeguindoDetalhado);
+
+router.get('/seguindo/seguidores/:id', seguindoController.listarSeguidores);
+
+router.get('/seguindo/quantidade', seguindoController.listarQuantidadeSeguindo);
+
+router.get('/seguindo/quantidade-seguidores', seguindoController.listarQuantidadeSeguidores);
+
 
 
 

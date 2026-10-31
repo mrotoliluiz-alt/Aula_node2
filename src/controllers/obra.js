@@ -1,8 +1,6 @@
 const db = require('../database/connection');
 
 module.exports = {
-
-    // LISTAR OBRAS
     async listarObras(request, response) {
         try {
             const { titulo, page = 1, limit = 5} = request.query;
@@ -14,8 +12,6 @@ module.exports = {
             
             const countValues = [`%${titulo ?? ''}%`];
             const [[{ total }]] = await db.query(countQuery, countValues);
-
-
 
 
             const listQuery = `
@@ -79,7 +75,6 @@ module.exports = {
     },
 
 
-    // CADASTRAR OBRA
     async cadastrarObra(request, response) {
         try {
 
@@ -124,7 +119,6 @@ module.exports = {
     },
 
 
-    // EDITAR OBRA
     async editarObra(request, response) {
         try {
 
@@ -178,7 +172,6 @@ module.exports = {
     },
 
 
-    // APAGAR OBRA
     async apagarObra(request, response) {
         try {
 

@@ -177,5 +177,75 @@ module.exports = {
         dados: error.message
       });
     }
+  },
+
+   
+  async listarCapitulosObra(request, response) {
+    try {
+
+      const { id } = request.params;
+
+      const sql = `
+      SELECT
+        Cap_ID,
+        Cap_ordem,
+        Cap_titulo,
+        Cap_conteudo
+      FROM CAPITULO
+      WHERE Ob_ID = ?
+      ORDER BY Cap_ordem;
+      `;
+
+      const values = [id];
+
+      const [rows] = await db.query(sql, values);
+
+      return response.status(200).json({
+        sucesso: true,
+        mensagem: 'Lista de capítulos da obra.',
+        itens: rows.length,
+        dados: rows
+      });
+
+    } catch (error) {
+      return response.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro na requisição.',
+        dados: error.message
+      });
+    }
+  },
+
+  async listarQntCapitulo(request, response) {
+    try {
+
+      const sql = `
+      SELECT
+        O.Ob_ID,
+        O.Ob_titulo,
+        COUNT(C.Cap_ID) AS Quantidade_Capitulos
+      FROM OBRA O
+      LEFT JOIN CAPITULO C
+        ON O.Ob_ID = C.Ob_ID
+      GROUP BY O.Ob_ID, O.Ob_titulo
+      ORDER BY O.Ob_ID;
+      `;
+
+      const [rows] = await db.query(sql);
+
+      return response.status(200).json({
+        sucesso: true,
+        mensagem: 'Quantidade de capítulos por obra.',
+        itens: rows.length,
+        dados: rows
+      });
+
+    } catch (error) {
+      return response.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro na requisição.',
+        dados: error.message
+      });
+    }
   }
 };

@@ -145,6 +145,153 @@ module.exports = {
             });
 
         }
-    }
+    },
+
+    async listarChatUsuarios(request, response) {
+        try {
+
+            const sql = `
+                SELECT
+                    C.*,
+                    R.US_nome AS Remetente,
+                    D.US_nome AS Destinatario
+                FROM CHAT_USUARIO C
+                INNER JOIN USUARIO R
+                    ON C.chat_remetente = R.Us_ID
+                INNER JOIN USUARIO D
+                    ON C.chat_destinatario = D.Us_ID
+                ORDER BY C.chat_data_hora;
+            `;
+
+            const [resultados] = await db.query(sql);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de mensagens com usuários.',
+                itens: resultados.length,
+                dados: resultados
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+
+        }
+    },
+
+    // CONSULTA 2 — LISTAR MENSAGENS DE UMA CONVERSA
+    async listarConversa(request, response) {
+        try {
+
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    *
+                FROM CHAT_USUARIO
+                WHERE
+                    chat_remetente = ?
+                    OR chat_destinatario = ?
+                ORDER BY chat_data_hora;
+            `;
+
+            const values = [id, id];
+
+            const [resultados] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de mensagens da conversa.',
+                itens: resultados.length,
+                dados: resultados
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+
+        }
+    },
+
+    // CONSULTA 3 — MENSAGENS ENVIADAS POR UM USUÁRIO
+    async listarMensagensEnviadas(request, response) {
+        try {
+
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    *
+                FROM CHAT_USUARIO
+                WHERE chat_remetente = ?
+                ORDER BY chat_data_hora;
+            `;
+
+            const values = [id];
+
+            const [resultados] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de mensagens enviadas.',
+                itens: resultados.length,
+                dados: resultados
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+
+        }
+    },
+
+    // CONSULTA 4 — MENSAGENS RECEBIDAS POR UM USUÁRIO
+    async listarMensagensRecebidas(request, response) {
+        try {
+
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    *
+                FROM CHAT_USUARIO
+                WHERE chat_destinatario = ?
+                ORDER BY chat_data_hora;
+            `;
+
+            const values = [id];
+
+            const [resultados] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de mensagens recebidas.',
+                itens: resultados.length,
+                dados: resultados
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+
+        }
+    },
+
 
 };

@@ -170,5 +170,153 @@ async editarFavoritosSalvos(request, response) {
         dados: error.message
       });
     }
-  }
+  },
+
+  async listarFavoritosDetalhados(request, response) {
+        try {
+
+            const sql = `
+                SELECT
+                    F.Us_ID,
+                    F.Ob_ID,
+                    O.Ob_titulo AS Obra,
+                    O.Ob_genero AS Genero,
+                    U.US_nome AS Autor,
+                    F.Fav_status,
+                    F.Ob_PagAtual
+                FROM FAVORITOS_SALVOS F
+                INNER JOIN OBRA O
+                    ON F.Ob_ID = O.Ob_ID
+                INNER JOIN USUARIO U
+                    ON O.Us_ID = U.Us_ID;
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de favoritos detalhados.',
+                itens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // CONSULTA 2 — FAVORITOS DE UM USUÁRIO
+    async listarFavoritosUsuario(request, response) {
+        try {
+
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    Ob_ID,
+                    Us_ID,
+                    Fav_status,
+                    Ob_PagAtual
+                FROM FAVORITOS_SALVOS
+                WHERE Us_ID = ?;
+            `;
+
+            const values = [id];
+
+            const [rows] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de favoritos do usuário.',
+                itens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // CONSULTA 3 — USUÁRIOS QUE SALVARAM UMA OBRA
+    async listarUsuariosFavoritaramObra(request, response) {
+        try {
+
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    U.Us_ID,
+                    U.US_nome,
+                    F.Ob_ID,
+                    F.Fav_status,
+                    F.Ob_PagAtual
+                FROM FAVORITOS_SALVOS F
+                INNER JOIN USUARIO U
+                    ON F.Us_ID = U.Us_ID
+                WHERE F.Ob_ID = ?;
+            `;
+
+            const values = [id];
+
+            const [rows] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de usuários que salvaram a obra.',
+                itens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // CONSULTA 4 — FAVORITOS POR STATUS
+    async listarFavoritosStatus(request, response) {
+        try {
+
+            const { status } = request.params;
+
+            const sql = `
+                SELECT
+                    Ob_ID,
+                    Us_ID,
+                    Fav_status,
+                    Ob_PagAtual
+                FROM FAVORITOS_SALVOS
+                WHERE Fav_status = ?;
+            `;
+
+            const values = [status];
+
+            const [rows] = await db.query(sql, values);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de favoritos por status.',
+                itens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
 };
