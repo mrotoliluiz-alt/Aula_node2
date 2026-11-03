@@ -67,6 +67,14 @@ router.get('/genero', obrasController.listarGeneros);
 
 router.get('/capitulos_obra', obrasController.listarQntCapitulo);
 
+router.get('/obras/detalhada/:id', obrasController.listarObraDetalhada);
+
+router.get('/obras/usuario/:id', obrasController.listarObrasUsuario);
+
+router.get('/obras/favoritas', obrasController.listarObrasFavoritas);
+
+router.get('/obras/mais-comentadas', obrasController.listarObrasMaisComentadas);
+
 
 
 const missoesController = require('../controllers/missoes');
@@ -78,6 +86,15 @@ router.post('/missoes', missoesController.cadastrarMissao);
 router.put('/missoes/:id', missoesController.editarMissao);
 
 router.delete('/missoes/:id', missoesController.apagarMissao);
+
+router.get('/usuario-missoes/detalhado', missoesController.listarUsuarioMissoesDetalhado);
+
+router.get('/usuario-missoes/usuario/:id', missoesController.listarMissoesUsuario);
+
+router.get('/usuario-missoes/missao/:id', missoesController.listarUsuariosMissao);
+
+router.get('/usuario-missoes/quantidade', missoesController.listarQuantidadeMissoesUsuario);
+
 
 
 
