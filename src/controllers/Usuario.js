@@ -105,6 +105,9 @@ async cadastrarUsuario(request, response) {
     }
 },
 
+async cadastrarUsuarioNome (requwst, response){
+    
+},
 
 
     

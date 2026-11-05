@@ -63,6 +63,15 @@ router.put('/usuario-missoes/:id', usuarioMissaoController.editarUsuarioMissao);
 
 router.delete('/usuario-missoes/:id', usuarioMissaoController.apagarUsuarioMissao);
 
+router.get('/usuario-missoes/detalhado', usuarioMissaoController.listarUsuarioMissoesDetalhado);
+
+router.get('/usuario-missoes/usuario/:id', usuarioMissaoController.listarMissoesUsuario);
+
+router.get('/usuario-missoes/missao/:id', usuarioMissaoController.listarUsuariosMissao);
+
+router.get('/usuario-missoes/quantidade', usuarioMissaoController.listarQuantidadeMissoesUsuario);
+
+
 
 
 
