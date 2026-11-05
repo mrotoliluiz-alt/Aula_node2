@@ -285,6 +285,176 @@ module.exports = {
             })
 
         }
+    },
+
+     async listarObraDetalhada(request, response) {
+        try {
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    O.Ob_ID,
+                    O.Ob_titulo,
+                    O.Ob_sinopse,
+                    O.Ob_genero,
+                    O.Ob_status,
+                    O.Ob_imagem,
+                    U.US_nome AS Autor,
+                    COUNT(C.Cap_ID) AS Quantidade_Capitulos
+                FROM OBRA O
+                INNER JOIN USUARIO U
+                    ON O.Us_ID = U.Us_ID
+                LEFT JOIN CAPITULO C
+                    ON O.Ob_ID = C.Ob_ID
+                WHERE O.Ob_ID = ?
+                GROUP BY
+                    O.Ob_ID,
+                    O.Ob_titulo,
+                    O.Ob_sinopse,
+                    O.Ob_genero,
+                    O.Ob_status,
+                    O.Ob_imagem,
+                    U.US_nome
+            `;
+
+            const [rows] = await db.query(sql, [id]);
+
+            if (rows.length === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: 'Obra não encontrada.',
+                    dados: null
+                });
+            }
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Obra detalhada consultada com sucesso.',
+                dados: rows[0]
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // 2. LISTAR OBRAS DE UM USUÁRIO
+    async listarObrasUsuario(request, response) {
+        try {
+            const { id } = request.params;
+
+            const sql = `
+                SELECT
+                    Ob_ID,
+                    Us_ID,
+                    Ob_titulo,
+                    Ob_sinopse,
+                    Ob_genero,
+                    Ob_status,
+                    Ob_imagem
+                FROM OBRA
+                WHERE Us_ID = ?
+                ORDER BY Ob_ID
+            `;
+
+            const [rows] = await db.query(sql, [id]);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: rows.length > 0
+                    ? 'Obras do usuário encontradas com sucesso.'
+                    : 'Nenhuma obra encontrada para este usuário.',
+                nItens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // 3. LISTAR OBRAS SALVAS/FAVORITADAS PELOS USUÁRIOS
+    async listarObrasFavoritas(request, response) {
+        try {
+            const sql = `
+                SELECT
+                    F.Us_ID,
+                    U.US_nome AS Usuario,
+                    O.Ob_ID,
+                    O.Ob_titulo,
+                    O.Ob_genero,
+                    O.Ob_imagem,
+                    F.Fav_status,
+                    F.Ob_PagAtual
+                FROM FAVORITOS_SALVOS F
+                INNER JOIN OBRA O
+                    ON F.Ob_ID = O.Ob_ID
+                INNER JOIN USUARIO U
+                    ON F.Us_ID = U.Us_ID
+                ORDER BY O.Ob_titulo
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Obras salvas pelos usuários consultadas com sucesso.',
+                nItens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+    // 4. LISTAR OBRAS COM MAIOR QUANTIDADE DE COMENTÁRIOS
+    async listarObrasMaisComentadas(request, response) {
+        try {
+            const sql = `
+                SELECT
+                    O.Ob_ID,
+                    O.Ob_titulo,
+                    O.Ob_genero,
+                    COUNT(C.Com_ID) AS Quantidade_Comentarios
+                FROM OBRA O
+                LEFT JOIN COMENTARIO_OBRA C
+                    ON O.Ob_ID = C.Ob_ID
+                GROUP BY
+                    O.Ob_ID,
+                    O.Ob_titulo,
+                    O.Ob_genero
+                ORDER BY Quantidade_Comentarios DESC
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Obras organizadas pela quantidade de comentários.',
+                nItens: rows.length,
+                dados: rows
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
     }
 
 };

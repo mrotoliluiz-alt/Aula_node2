@@ -81,6 +81,15 @@ router.get('/genero', obrasController.listarGeneros);
 
 router.get('/capitulos_obra', obrasController.listarQntCapitulo);
 
+router.get('/obras/detalhada/:id', obrasController.listarObraDetalhada);
+
+router.get('/obras/usuario/:id', obrasController.listarObrasUsuario);
+
+router.get('/obras/favoritas', obrasController.listarObrasFavoritas);
+
+router.get('/obras/mais-comentadas', obrasController.listarObrasMaisComentadas);
+
+
 
 
 const missoesController = require('../controllers/missoes');
