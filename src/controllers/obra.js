@@ -3,7 +3,7 @@ const db = require('../database/connection');
 
 const { gerarUrl } = require('../utils/gerar_imagens/gerarUrl');
 
-const uploadImagem = require('../middleware/uploadHelper');
+const uploadImagem = require('../../middleware/uploadHelper');
 
 const uploadObras = uploadImagem('obras');
 

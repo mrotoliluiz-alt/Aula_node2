@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-const uploadImagem = require('../middleware/uploadHelper');
+const uploadImagem = require('../../middleware/uploadHelper');
 
 const uploadUsuarios = uploadImagem('usuarios');
 const uploadObras = uploadImagem('obras');
