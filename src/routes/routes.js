@@ -2,15 +2,20 @@ const express = require('express');
 
 const router = express.Router();
 
+const uploadImagem = require('../middleware/uploadHelper');
+
+const uploadUsuarios = uploadImagem('usuarios');
+const uploadObras = uploadImagem('obras');
+
 
 
 const UsuariosController = require('../controllers/Usuario');
 
 router.get('/usuarios', UsuariosController.listarUsuarios);
 
-router.post('/usuarios', UsuariosController.cadastrarUsuario);
+router.post('/usuarios', uploadUsuarios.single('img'), UsuariosController.cadastrarUsuario);
 
-router.put('/usuarios/:id', UsuariosController.editarUsuario);
+router.put('/usuarios/:id', uploadUsuarios.single('img'), UsuariosController.editarUsuario);
 
 router.delete('/usuarios/:id', UsuariosController.apagarUsuario);
 
@@ -80,9 +85,9 @@ const obrasController = require('../controllers/obra');
 
 router.get('/obras', obrasController.listarObras);
 
-router.post('/obras', obrasController.cadastrarObra);
+router.post('/obras', uploadObras.single('img'), obrasController.cadastrarObra);
 
-router.put('/obras/:id', obrasController.editarObra);
+router.put('/obras/:id', uploadObras.single('img'), obrasController.editarObra);
 
 router.delete('/obras/:id', obrasController.apagarObra);
 

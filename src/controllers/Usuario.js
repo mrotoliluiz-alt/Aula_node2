@@ -1,10 +1,17 @@
 
 const db = require('../database/connection');
+
 const bcrypt = require('bcrypt');
-const { validarEmail } = require('../utils');
+
+const { validarEmail } = require('../utils/validacoesusuarios');
+
+const { gerarUrl } = require('../utils/gerar_imagens/gerarUrl');
+
 
 module.exports = {
 
+
+    // LISTAR USUÁRIOS
     async listarUsuarios(request, response) {
         try {
 
@@ -25,11 +32,21 @@ module.exports = {
 
             const [rows] = await db.query(sql);
 
+            // Gera a URL da imagem de cada usuário
+            const dados = rows.map(usuario => ({
+                ...usuario,
+                Us_imagem: gerarUrl(
+                    usuario.Us_imagem,
+                    'usuarios',
+                    'sem.jpg'
+                )
+            }));
+
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Lista de usuários.',
                 itens: rows.length,
-                dados: rows
+                dados: dados
             });
 
         } catch (error) {
@@ -44,6 +61,7 @@ module.exports = {
     },
 
 
+    // CADASTRAR USUÁRIO
     async cadastrarUsuario(request, response) {
         try {
 
@@ -59,6 +77,11 @@ module.exports = {
                 Us_adm,
                 Us_imagem
             } = request.body;
+
+            // Recebe a imagem enviada pelo formulário
+            const imagem = request.file
+                ? request.file.filename
+                : (Us_imagem ?? null);
 
             // Validação dos campos obrigatórios
             if (!US_nome || !Us_email || !Us_senha) {
@@ -125,7 +148,7 @@ module.exports = {
                 Us_XP_total ?? 0,
                 Us_dt_ultimo_acesso ?? null,
                 Us_adm ?? 0,
-                Us_imagem ?? null
+                imagem
             ];
 
             const [result] = await db.query(sql, values);
@@ -136,7 +159,12 @@ module.exports = {
                 dados: {
                     id: result.insertId,
                     nome: US_nome,
-                    email: Us_email
+                    email: Us_email,
+                    imagem: gerarUrl(
+                        imagem,
+                        'usuarios',
+                        'sem.jpg'
+                    )
                 }
             });
 
@@ -160,6 +188,7 @@ module.exports = {
     },
 
 
+    // EDITAR USUÁRIO
     async editarUsuario(request, response) {
         try {
 
@@ -178,6 +207,11 @@ module.exports = {
 
             const { id } = request.params;
 
+            // Recebe a nova imagem, caso tenha sido enviada
+            const imagem = request.file
+                ? request.file.filename
+                : Us_imagem;
+
             // Campos que podem ser atualizados
             const campos = {
                 US_nome,
@@ -189,7 +223,7 @@ module.exports = {
                 Us_XP_total,
                 Us_dt_ultimo_acesso,
                 Us_adm,
-                Us_imagem
+                Us_imagem: imagem
             };
 
             const camposAtualizar = [];
@@ -266,11 +300,19 @@ module.exports = {
             const [result] = await db.query(sql, valores);
 
             if (result.affectedRows === 0) {
-                return response.status(404).json({
-                    sucesso: false,
-                    mensagem: `Usuário ${id} não encontrado!`,
-                    dados: null
-                });
+
+                const [usuarioExiste] = await db.query(
+                    'SELECT Us_ID FROM USUARIO WHERE Us_ID = ?',
+                    [id]
+                );
+
+                if (usuarioExiste.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: `Usuário ${id} não encontrado!`,
+                        dados: null
+                    });
+                }
             }
 
             return response.status(200).json({
@@ -278,7 +320,10 @@ module.exports = {
                 mensagem: `Usuário ${id} editado com sucesso!`,
                 dados: {
                     id,
-                    camposAtualizados: camposAtualizar.length
+                    camposAtualizados: camposAtualizar.length,
+                    imagem: request.file
+                        ? gerarUrl(imagem, 'usuarios', 'sem.jpg')
+                        : undefined
                 }
             });
 
@@ -302,6 +347,7 @@ module.exports = {
     },
 
 
+    // APAGAR USUÁRIO
     async apagarUsuario(request, response) {
         try {
 
@@ -342,6 +388,7 @@ module.exports = {
     },
 
 
+    // LOGIN
     async login(request, response) {
         try {
 
@@ -391,7 +438,11 @@ module.exports = {
                 id: usuario.Us_ID,
                 nome: usuario.US_nome,
                 tipo: usuario.Us_adm,
-                imagem: usuario.Us_imagem
+                imagem: gerarUrl(
+                    usuario.Us_imagem,
+                    'usuarios',
+                    'sem.jpg'
+                )
             };
 
             return response.status(200).json({

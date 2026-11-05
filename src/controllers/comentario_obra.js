@@ -1,3 +1,4 @@
+
 const db = require('../database/connection');
 
 module.exports = {
@@ -13,6 +14,7 @@ module.exports = {
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Lista de comentários.',
+                itens: resultado.length,
                 dados: resultado
             });
 
@@ -40,6 +42,14 @@ module.exports = {
                 com_obr_moderacao
             } = request.body;
 
+            if (!Us_ID || !Ob_ID || !com_obr_texto) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o usuário, a obra e o texto do comentário.',
+                    dados: null
+                });
+            }
+
             const [resultado] = await db.query(
                 `INSERT INTO COMENTARIO_OBRA
                 (
@@ -53,16 +63,23 @@ module.exports = {
                 [
                     Us_ID,
                     Ob_ID,
-                    com_obr_Dtenvio,
+                    com_obr_Dtenvio ?? null,
                     com_obr_texto,
-                    com_obr_moderacao
+                    com_obr_moderacao ?? null
                 ]
             );
 
-            return response.status(200).json({
+            return response.status(201).json({
                 sucesso: true,
                 mensagem: 'Comentário cadastrado com sucesso.',
-                dados: resultado
+                dados: {
+                    Com_ID: resultado.insertId,
+                    Us_ID,
+                    Ob_ID,
+                    com_obr_Dtenvio,
+                    com_obr_texto,
+                    com_obr_moderacao
+                }
             });
 
         } catch (error) {
@@ -91,29 +108,86 @@ module.exports = {
                 com_obr_moderacao
             } = request.body;
 
-            const [resultado] = await db.query(
-                `UPDATE COMENTARIO_OBRA
-                SET
-                    Us_ID = ?,
-                    Ob_ID = ?,
-                    com_obr_Dtenvio = ?,
-                    com_obr_texto = ?,
-                    com_obr_moderacao = ?
-                WHERE Com_ID = ?`,
-                [
-                    Us_ID,
-                    Ob_ID,
-                    com_obr_Dtenvio,
-                    com_obr_texto,
-                    com_obr_moderacao,
-                    id
-                ]
-            );
+            if (
+                Us_ID === undefined &&
+                Ob_ID === undefined &&
+                com_obr_Dtenvio === undefined &&
+                com_obr_texto === undefined &&
+                com_obr_moderacao === undefined
+            ) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe pelo menos um campo para edição.',
+                    dados: null
+                });
+            }
+
+            const campos = [];
+            const values = [];
+
+            if (Us_ID !== undefined) {
+                campos.push('Us_ID = ?');
+                values.push(Us_ID);
+            }
+
+            if (Ob_ID !== undefined) {
+                campos.push('Ob_ID = ?');
+                values.push(Ob_ID);
+            }
+
+            if (com_obr_Dtenvio !== undefined) {
+                campos.push('com_obr_Dtenvio = ?');
+                values.push(com_obr_Dtenvio);
+            }
+
+            if (com_obr_texto !== undefined) {
+                campos.push('com_obr_texto = ?');
+                values.push(com_obr_texto);
+            }
+
+            if (com_obr_moderacao !== undefined) {
+                campos.push('com_obr_moderacao = ?');
+                values.push(com_obr_moderacao);
+            }
+
+            const sql = `
+                UPDATE COMENTARIO_OBRA
+                SET ${campos.join(', ')}
+                WHERE Com_ID = ?
+            `;
+
+            values.push(id);
+
+            const [resultado] = await db.query(sql, values);
+
+            if (resultado.affectedRows === 0) {
+
+                const [rows] = await db.query(
+                    'SELECT Com_ID FROM COMENTARIO_OBRA WHERE Com_ID = ?',
+                    [id]
+                );
+
+                if (rows.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: `Comentário ${id} não encontrado.`,
+                        dados: null
+                    });
+                }
+
+            }
 
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Comentário editado com sucesso.',
-                dados: resultado
+                dados: {
+                    Com_ID: Number(id),
+                    Us_ID,
+                    Ob_ID,
+                    com_obr_Dtenvio,
+                    com_obr_texto,
+                    com_obr_moderacao
+                }
             });
 
         } catch (error) {
@@ -139,6 +213,14 @@ module.exports = {
                 [id]
             );
 
+            if (resultado.affectedRows === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: `Comentário ${id} não encontrado.`,
+                    dados: null
+                });
+            }
+
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Comentário apagado com sucesso.',
@@ -156,7 +238,8 @@ module.exports = {
         }
     },
 
-     // CONSULTA 1 — COMENTÁRIOS COM NOME DO USUÁRIO E TÍTULO DA OBRA
+
+    // CONSULTA 1 — COMENTÁRIOS COM NOME DO USUÁRIO E TÍTULO DA OBRA
     async listarComentariosDetalhados(request, response) {
         try {
 
@@ -195,6 +278,7 @@ module.exports = {
 
         }
     },
+
 
     // CONSULTA 2 — COMENTÁRIOS DE UMA OBRA
     async listarComentariosObra(request, response) {
@@ -237,6 +321,7 @@ module.exports = {
         }
     },
 
+
     // CONSULTA 3 — COMENTÁRIOS DE UM USUÁRIO
     async listarComentariosUsuario(request, response) {
         try {
@@ -278,6 +363,7 @@ module.exports = {
         }
     },
 
+
     // CONSULTA 4 — COMENTÁRIOS POR MODERAÇÃO
     async listarComentariosModeracao(request, response) {
         try {
@@ -317,6 +403,6 @@ module.exports = {
             });
 
         }
-    },
+    }
 
 };

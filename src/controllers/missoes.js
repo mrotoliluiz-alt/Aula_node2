@@ -54,6 +54,14 @@ module.exports = {
                 Ms_tipo
             } = request.body;
 
+            if (!Ms_titulo || !Ms_tipo || Ms_recompensaXP === undefined) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o título, a recompensa XP e o tipo da missão.',
+                    dados: null
+                });
+            }
+
             const sql = `
                 INSERT INTO MISSOES (
                     Ms_titulo,
@@ -66,7 +74,7 @@ module.exports = {
 
             const values = [
                 Ms_titulo,
-                Ms_descricao,
+                Ms_descricao ?? null,
                 Ms_recompensaXP,
                 Ms_tipo
             ];
@@ -117,35 +125,68 @@ module.exports = {
 
             const { id } = request.params;
 
+            if (
+                Ms_titulo === undefined &&
+                Ms_descricao === undefined &&
+                Ms_recompensaXP === undefined &&
+                Ms_tipo === undefined
+            ) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe pelo menos um campo para edição.',
+                    dados: null
+                });
+            }
+
+            const campos = [];
+            const values = [];
+
+            if (Ms_titulo !== undefined) {
+                campos.push('Ms_titulo = ?');
+                values.push(Ms_titulo);
+            }
+
+            if (Ms_descricao !== undefined) {
+                campos.push('Ms_descricao = ?');
+                values.push(Ms_descricao);
+            }
+
+            if (Ms_recompensaXP !== undefined) {
+                campos.push('Ms_recompensaXP = ?');
+                values.push(Ms_recompensaXP);
+            }
+
+            if (Ms_tipo !== undefined) {
+                campos.push('Ms_tipo = ?');
+                values.push(Ms_tipo);
+            }
+
             const sql = `
                 UPDATE MISSOES
-                SET
-                    Ms_titulo = ?,
-                    Ms_descricao = ?,
-                    Ms_recompensaXP = ?,
-                    Ms_tipo = ?
+                SET ${campos.join(', ')}
                 WHERE Ms_ID = ?
             `;
 
-            const values = [
-                Ms_titulo,
-                Ms_descricao,
-                Ms_recompensaXP,
-                Ms_tipo,
-                id
-            ];
+            values.push(id);
 
             const [result] = await db.query(sql, values);
 
             if (result.affectedRows === 0) {
 
-                return response.status(404).json({
+                const [rows] = await db.query(
+                    'SELECT Ms_ID FROM MISSOES WHERE Ms_ID = ?',
+                    [id]
+                );
 
-                    sucesso: false,
-                    mensagem: `Missão ${id} não encontrada ou nenhum dado foi alterado.`,
-                    dados: null
+                if (rows.length === 0) {
+                    return response.status(404).json({
 
-                });
+                        sucesso: false,
+                        mensagem: `Missão ${id} não encontrada.`,
+                        dados: null
+
+                    });
+                }
 
             }
 
@@ -227,7 +268,8 @@ module.exports = {
 
     },
 
-     async listarMissoesRecompensa(request, response) {
+
+    async listarMissoesRecompensa(request, response) {
 
         try {
 
@@ -266,6 +308,7 @@ module.exports = {
         }
 
     },
+
 
     // CONSULTA 2 — PESQUISAR MISSÕES PELO TÍTULO
     async pesquisarMissoes(request, response) {
@@ -312,6 +355,7 @@ module.exports = {
 
     },
 
+
     // CONSULTA 3 — LISTAR MISSÕES POR TIPO
     async listarMissoesTipo(request, response) {
 
@@ -357,6 +401,7 @@ module.exports = {
 
     },
 
+
     // CONSULTA 4 — MISSÕES DOS USUÁRIOS COM STATUS E DATA DE CONCLUSÃO
     async listarMissoesUsuarios(request, response) {
 
@@ -364,7 +409,7 @@ module.exports = {
 
             const sql = `
                 SELECT
-                    U.Us_nome AS Usuario,
+                    U.US_nome AS Usuario,
                     M.Ms_titulo AS Missao,
                     M.Ms_tipo AS Tipo,
                     M.Ms_recompensaXP AS Recompensa_XP,
@@ -401,6 +446,5 @@ module.exports = {
         }
 
     }
-
 
 };

@@ -1,6 +1,20 @@
 
 const db = require('../database/connection');
 
+const { gerarUrl } = require('../utils/gerar_imagens/gerarUrl');
+
+const uploadImagem = require('../middleware/uploadHelper');
+
+const uploadObras = uploadImagem('obras');
+
+function gerarUrlObra(nomeArquivo) {
+    if (!nomeArquivo) {
+        return null;
+    }
+
+    return gerarUrl(nomeArquivo, 'obras', nomeArquivo);
+}
+
 module.exports = {
 
     async listarObras(request, response) {
@@ -73,7 +87,7 @@ module.exports = {
                 titulo: obra.Obra,
                 autor: obra.Autor,
                 sinopse: obra.Sinopse,
-                imagem: obra.Imagem,
+                imagem: gerarUrlObra(obra.Imagem),
                 genero: obra.Genero,
                 capitulos: obra.Quantidade_Capitulos
             }));
@@ -108,8 +122,11 @@ module.exports = {
                 Ob_sinopse,
                 Ob_genero,
                 Ob_status,
-                Ob_imagem
             } = request.body;
+
+            const Ob_imagem = request.file
+            ? request.file.filename
+            : request.body.Ob_imagem ?? null;
 
             if (!Us_ID || !Ob_titulo) {
                 return response.status(400).json({
@@ -143,7 +160,7 @@ module.exports = {
                     Ob_sinopse: Ob_sinopse ?? null,
                     Ob_genero: Ob_genero ?? null,
                     Ob_status: Ob_status ?? null,
-                    Ob_imagem: Ob_imagem ?? null
+                    Ob_imagem: gerarUrlObra(Ob_imagem)
                 }
             });
 
@@ -178,13 +195,17 @@ module.exports = {
                 Ob_imagem
             } = request.body;
 
+            const imagemAtualizada = request.file
+            ? request.file.filename
+            : Ob_imagem;
+
             const campos = {
                 Us_ID,
                 Ob_titulo,
                 Ob_sinopse,
                 Ob_genero,
                 Ob_status,
-                Ob_imagem
+                Ob_imagem: imagemAtualizada
             };
 
             const camposAtualizar = [];
@@ -317,7 +338,9 @@ module.exports = {
                 sucesso: true,
                 mensagem: 'Obras por gênero consultadas com sucesso.',
                 nItens,
-                dados: rows
+                dados: rows.map(obra => ({...obra,
+                        Ob_imagem: gerarUrlObra(obra.Ob_imagem)
+                    }))
             });
 
         } catch (error) {
@@ -422,7 +445,9 @@ module.exports = {
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Obra detalhada consultada com sucesso.',
-                dados: rows[0]
+                dados: {...rows[0],
+                Ob_imagem: gerarUrlObra(rows[0].Ob_imagem)
+            }
             });
 
         } catch (error) {

@@ -1,8 +1,9 @@
+
 const db = require('../database/connection');
 
 module.exports = {
 
-    // Listar mensagens
+    // LISTAR MENSAGENS
     async listarChat(request, response) {
         try {
 
@@ -13,6 +14,7 @@ module.exports = {
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Lista de mensagens.',
+                itens: resultados.length,
                 dados: resultados
             });
 
@@ -27,7 +29,8 @@ module.exports = {
         }
     },
 
-    // Cadastrar mensagem
+
+    // CADASTRAR MENSAGEM
     async cadastrarChat(request, response) {
         try {
 
@@ -39,23 +42,48 @@ module.exports = {
                 chat_status
             } = request.body;
 
+            if (
+                !chat_remetente ||
+                !chat_destinatario ||
+                !chat_mensagem
+            ) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o remetente, o destinatário e o conteúdo da mensagem.',
+                    dados: null
+                });
+            }
+
             const [resultados] = await db.query(
                 `INSERT INTO CHAT_USUARIO
-                (chat_remetente, chat_destinatario, chat_data_hora, chat_mensagem, chat_status)
-                VALUES (?, ?, ?, ?, ?)`,
-                [
+                (
                     chat_remetente,
                     chat_destinatario,
                     chat_data_hora,
                     chat_mensagem,
                     chat_status
+                )
+                VALUES (?, ?, ?, ?, ?)`,
+                [
+                    chat_remetente,
+                    chat_destinatario,
+                    chat_data_hora ?? null,
+                    chat_mensagem,
+                    chat_status ?? null
                 ]
             );
 
             return response.status(201).json({
                 sucesso: true,
                 mensagem: 'Mensagem cadastrada com sucesso.',
-                dados: resultados
+                dados: {
+                    Chat_ID: resultados.insertId,
+                    chat_remetente,
+                    chat_destinatario,
+                    chat_data_hora,
+                    chat_mensagem,
+                    chat_status
+                }
             });
 
         } catch (error) {
@@ -69,7 +97,8 @@ module.exports = {
         }
     },
 
-    // Editar mensagem
+
+    // EDITAR MENSAGEM
     async editarChat(request, response) {
         try {
 
@@ -83,28 +112,86 @@ module.exports = {
                 chat_status
             } = request.body;
 
-            const [resultados] = await db.query(
-                `UPDATE CHAT_USUARIO
-                SET chat_remetente = ?,
-                    chat_destinatario = ?,
-                    chat_data_hora = ?,
-                    chat_mensagem = ?,
-                    chat_status = ?
-                WHERE Chat_ID = ?`,
-                [
-                    chat_remetente,
-                    chat_destinatario,
-                    chat_data_hora,
-                    chat_mensagem,
-                    chat_status,
-                    Chat_ID
-                ]
-            );
+            if (
+                chat_remetente === undefined &&
+                chat_destinatario === undefined &&
+                chat_data_hora === undefined &&
+                chat_mensagem === undefined &&
+                chat_status === undefined
+            ) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe pelo menos um campo para edição.',
+                    dados: null
+                });
+            }
+
+            const campos = [];
+            const values = [];
+
+            if (chat_remetente !== undefined) {
+                campos.push('chat_remetente = ?');
+                values.push(chat_remetente);
+            }
+
+            if (chat_destinatario !== undefined) {
+                campos.push('chat_destinatario = ?');
+                values.push(chat_destinatario);
+            }
+
+            if (chat_data_hora !== undefined) {
+                campos.push('chat_data_hora = ?');
+                values.push(chat_data_hora);
+            }
+
+            if (chat_mensagem !== undefined) {
+                campos.push('chat_mensagem = ?');
+                values.push(chat_mensagem);
+            }
+
+            if (chat_status !== undefined) {
+                campos.push('chat_status = ?');
+                values.push(chat_status);
+            }
+
+            const sql = `
+                UPDATE CHAT_USUARIO
+                SET ${campos.join(', ')}
+                WHERE Chat_ID = ?
+            `;
+
+            values.push(Chat_ID);
+
+            const [resultados] = await db.query(sql, values);
+
+            if (resultados.affectedRows === 0) {
+
+                const [rows] = await db.query(
+                    'SELECT Chat_ID FROM CHAT_USUARIO WHERE Chat_ID = ?',
+                    [Chat_ID]
+                );
+
+                if (rows.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: `Mensagem ${Chat_ID} não encontrada.`,
+                        dados: null
+                    });
+                }
+
+            }
 
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Mensagem editada com sucesso.',
-                dados: resultados
+                dados: {
+                    Chat_ID: Number(Chat_ID),
+                    chat_remetente,
+                    chat_destinatario,
+                    chat_data_hora,
+                    chat_mensagem,
+                    chat_status
+                }
             });
 
         } catch (error) {
@@ -118,7 +205,8 @@ module.exports = {
         }
     },
 
-    // Apagar mensagem
+
+    // APAGAR MENSAGEM
     async apagarChat(request, response) {
         try {
 
@@ -129,6 +217,14 @@ module.exports = {
                 WHERE Chat_ID = ?`,
                 [Chat_ID]
             );
+
+            if (resultados.affectedRows === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: `Mensagem ${Chat_ID} não encontrada.`,
+                    dados: null
+                });
+            }
 
             return response.status(200).json({
                 sucesso: true,
@@ -147,6 +243,8 @@ module.exports = {
         }
     },
 
+
+    // LISTAR MENSAGENS COM NOME DOS USUÁRIOS
     async listarChatUsuarios(request, response) {
         try {
 
@@ -182,6 +280,7 @@ module.exports = {
 
         }
     },
+
 
     // CONSULTA 2 — LISTAR MENSAGENS DE UMA CONVERSA
     async listarConversa(request, response) {
@@ -221,6 +320,7 @@ module.exports = {
         }
     },
 
+
     // CONSULTA 3 — MENSAGENS ENVIADAS POR UM USUÁRIO
     async listarMensagensEnviadas(request, response) {
         try {
@@ -257,6 +357,7 @@ module.exports = {
         }
     },
 
+
     // CONSULTA 4 — MENSAGENS RECEBIDAS POR UM USUÁRIO
     async listarMensagensRecebidas(request, response) {
         try {
@@ -291,7 +392,6 @@ module.exports = {
             });
 
         }
-    },
-
+    }
 
 };
