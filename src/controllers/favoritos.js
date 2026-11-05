@@ -1,178 +1,225 @@
+
 const db = require('../database/connection');
 
 module.exports = {
-  async listarFavoritosSalvos(request, response) {
-    try {
+    async listarFavoritosSalvos(request, response) {
+        try {
 
-      const sql = `SELECT 
-           Ob_ID, Us_ID, Fav_status, Ob_PagAtual
-            FROM FAVORITOS_SALVOS`;
+            const sql = `SELECT 
+                Ob_ID, Us_ID, Fav_status, Ob_PagAtual
+                FROM FAVORITOS_SALVOS`;
 
-          const [rows] = await db.query(sql);
+            const [rows] = await db.query(sql);
 
-      return response.status(200).json({
-        sucesso: true,
-        mensagem: 'Lista de favoritos salvos.',
-        itens: rows.lenght,
-        dados: rows
-      });
-    } catch (error) {
-      return response.status(500).json({
-        sucesso: false,
-        mensagem: 'Erro na requisição.',
-        dados: error.message
-      });
-    }
-  },
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Lista de favoritos salvos.',
+                itens: rows.length,
+                dados: rows
+            });
 
- 
-async cadastrarFavoritosSalvos(request, response) {
-    try {
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
 
-        const {
-            Us_ID,
-            Ob_ID,
-            Fav_status,
-            Ob_PagAtual
-        } = request.body;
 
-        const sql = `
-            INSERT INTO FAVORITOS_SALVOS (
+    async cadastrarFavoritosSalvos(request, response) {
+        try {
+
+            const {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
                 Ob_PagAtual
-            )
-            VALUES (?, ?, ?, ?)
-        `;
+            } = request.body;
 
-        const values = [
-            Us_ID,
-            Ob_ID,
-            Fav_status,
-            Ob_PagAtual
-        ];
+            if (!Us_ID || !Ob_ID) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o ID do usuário e o ID da obra.',
+                    dados: null
+                });
+            }
 
-        const [result] = await db.query(sql, values);
+            const sql = `
+                INSERT INTO FAVORITOS_SALVOS (
+                    Us_ID,
+                    Ob_ID,
+                    Fav_status,
+                    Ob_PagAtual
+                )
+                VALUES (?, ?, ?, ?)
+            `;
 
-        const dados = {
-            id: result.insertId,
-            Us_ID,
-            Ob_ID,
-            Fav_status,
-            Ob_PagAtual
-        };
+            const values = [
+                Us_ID,
+                Ob_ID,
+                Fav_status,
+                Ob_PagAtual
+            ];
 
-        return response.status(201).json({
-            sucesso: true,
-            mensagem: 'Favorito salvo com sucesso.',
-            dados: dados
-        });
+            const [result] = await db.query(sql, values);
 
-    } catch (error) {
+            const dados = {
+                Us_ID,
+                Ob_ID,
+                Fav_status,
+                Ob_PagAtual
+            };
 
-        return response.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro na requisição.',
-            dados: error.message
-        });
-
-    }
-},
-
-
- 
-async editarFavoritosSalvos(request, response) {
-    try {
-        const {
-            Us_ID,
-            Fav_status,
-            Ob_PagAtual
-        } = request.body;
-
-        const { id } = request.params;
-
-        const sql = `
-            UPDATE FAVORITOS_SALVOS
-            SET
-                Fav_status = ?,
-                Ob_PagAtual = ?
-            WHERE Ob_ID = ? AND Us_ID = ?
-        `;
-
-        const values = [
-            Fav_status,
-            Ob_PagAtual,
-            id,
-            Us_ID
-        ];
-
-        const [result] = await db.query(sql, values);
-
-        if (result.affectedRows === 0) {
-            return response.status(404).json({
-                sucesso: false,
-                mensagem: `Favorito da obra ${id} não encontrado para este usuário!`,
-                dados: null
+            return response.status(201).json({
+                sucesso: true,
+                mensagem: 'Favorito salvo com sucesso.',
+                dados: dados
             });
-        }
 
-        return response.status(200).json({
-            sucesso: true,
-            mensagem: `Favorito da obra ${id} editado com sucesso.`,
-            dados: {
-                id,
+        } catch (error) {
+
+            if (error.code === 'ER_DUP_ENTRY') {
+                return response.status(409).json({
+                    sucesso: false,
+                    mensagem: 'Esta obra já está salva nos favoritos deste usuário.',
+                    dados: null
+                });
+            }
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+
+        }
+    },
+
+
+    async editarFavoritosSalvos(request, response) {
+        try {
+
+            const {
                 Us_ID,
                 Fav_status,
                 Ob_PagAtual
+            } = request.body;
+
+            const { id } = request.params;
+
+            if (!Us_ID) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o ID do usuário.',
+                    dados: null
+                });
             }
-        });
 
-    } catch (error) {
-        return response.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro na requisição.',
-            dados: error.message
-        });
-    }
-},
+            const sql = `
+                UPDATE FAVORITOS_SALVOS
+                SET
+                    Fav_status = ?,
+                    Ob_PagAtual = ?
+                WHERE Ob_ID = ? AND Us_ID = ?
+            `;
+
+            const values = [
+                Fav_status,
+                Ob_PagAtual,
+                id,
+                Us_ID
+            ];
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+
+                const [rows] = await db.query(
+                    `SELECT Ob_ID FROM FAVORITOS_SALVOS
+                     WHERE Ob_ID = ? AND Us_ID = ?`,
+                    [id, Us_ID]
+                );
+
+                if (rows.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: `Favorito da obra ${id} não encontrado para este usuário!`,
+                        dados: null
+                    });
+                }
+            }
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: `Favorito da obra ${id} editado com sucesso.`,
+                dados: {
+                    Ob_ID: id,
+                    Us_ID,
+                    Fav_status,
+                    Ob_PagAtual
+                }
+            });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
 
 
-  async apagarFavoritosSalvos(request, response) {
-    try {
+    async apagarFavoritosSalvos(request, response) {
+        try {
 
-      const {id} = request.params;
+            const { id } = request.params;
+            const { Us_ID } = request.body;
 
-            const sql = `DELETE FROM FAVORITOS_SALVOS WHERE Us_ID = ? and Ob_ID`;
+            if (!Us_ID) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Informe o ID do usuário.',
+                    dados: null
+                });
+            }
 
-            const values = [id];
+            const sql = `
+                DELETE FROM FAVORITOS_SALVOS
+                WHERE Us_ID = ? AND Ob_ID = ?
+            `;
+
+            const values = [Us_ID, id];
 
             const [result] = await db.query(sql, values);
 
             if (result.affectedRows === 0) {
                 return response.status(404).json({
                     sucesso: false,
-                    mensagem: ` Obra Favorita ${id} não encontrada!`,
+                    mensagem: `Obra favorita ${id} não encontrada para este usuário!`,
                     dados: null
                 });
             }
 
-      return response.status(200).json({
-        sucesso: true,
-        mensagem: `Obra Favorita ${id} apagada com sucesso.`,
-        dados: null
-      });
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: `Obra favorita ${id} apagada com sucesso.`,
+                dados: null
+            });
 
-    } catch (error) {
-      return response.status(500).json({
-        sucesso: false,
-        mensagem: 'Erro na requisição.',
-        dados: error.message
-      });
-    }
-  },
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
 
-  async listarFavoritosDetalhados(request, response) {
+
+    async listarFavoritosDetalhados(request, response) {
         try {
 
             const sql = `
@@ -209,6 +256,7 @@ async editarFavoritosSalvos(request, response) {
         }
     },
 
+
     // CONSULTA 2 — FAVORITOS DE UM USUÁRIO
     async listarFavoritosUsuario(request, response) {
         try {
@@ -244,6 +292,7 @@ async editarFavoritosSalvos(request, response) {
             });
         }
     },
+
 
     // CONSULTA 3 — USUÁRIOS QUE SALVARAM UMA OBRA
     async listarUsuariosFavoritaramObra(request, response) {
@@ -284,6 +333,7 @@ async editarFavoritosSalvos(request, response) {
         }
     },
 
+
     // CONSULTA 4 — FAVORITOS POR STATUS
     async listarFavoritosStatus(request, response) {
         try {
@@ -318,5 +368,5 @@ async editarFavoritosSalvos(request, response) {
                 dados: error.message
             });
         }
-    },
+    }
 };

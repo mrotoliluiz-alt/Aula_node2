@@ -11,18 +11,19 @@ module.exports = {
                 return response.status(400).json({
                     sucesso: false,
                     mensagem: 'O ID do usuário é obrigatório para ver quem ele está seguindo.',
+                    dados: null
                 });
             }
 
-            const Seguindo = seguindo ? `%${seguindo}%` : `%`;
+            const Seguindo = seguindo ? `%${seguindo}%` : '%';
 
             const SQL_LISTAR_SEGUIDORES = `
                 SELECT
-                    Us_ID, Seguindo
-                FROM
-                    SEGUINDO
-                WHERE
-                    Us_ID = ? AND Seguindo LIKE ?;
+                    Us_ID,
+                    Seguindo
+                FROM SEGUINDO
+                WHERE Us_ID = ?
+                AND Seguindo LIKE ?
             `;
 
             const values = [Us_ID, Seguindo];
@@ -38,19 +39,19 @@ module.exports = {
                 mensagem: dados.length > 0
                     ? 'Lista de usuários seguidos encontrada com sucesso.'
                     : 'Nenhum usuário encontrado com os critérios fornecidos.',
-                nItens: dados.length,
+                itens: dados.length,
                 dados
             });
 
         } catch (error) {
-            console.error('Erro na requisição', error);
             return response.status(500).json({
                 sucesso: false,
-                mensagem: 'Erro interno na requisição.',
+                mensagem: 'Erro na requisição.',
                 dados: error.message
             });
         }
     },
+
 
     async cadastrarSeguindo(request, response) {
         try {
@@ -58,6 +59,22 @@ module.exports = {
                 Us_ID,
                 Seguindo
             } = request.body;
+
+            if (!Us_ID || !Seguindo) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'O ID do usuário e o ID do usuário seguido são obrigatórios.',
+                    dados: null
+                });
+            }
+
+            if (Number(Us_ID) === Number(Seguindo)) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Um usuário não pode seguir a si mesmo.',
+                    dados: null
+                });
+            }
 
             const sql = `
                 INSERT INTO SEGUINDO (
@@ -74,18 +91,32 @@ module.exports = {
 
             await db.query(sql, values);
 
-            const dados = {
-                Us_ID,
-                Seguindo
-            };
-
             return response.status(201).json({
                 sucesso: true,
                 mensagem: 'Usuário seguido com sucesso.',
-                dados: dados
+                dados: {
+                    Us_ID,
+                    Seguindo
+                }
             });
 
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return response.status(409).json({
+                    sucesso: false,
+                    mensagem: 'Este usuário já está sendo seguido.',
+                    dados: null
+                });
+            }
+
+            if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Usuário não encontrado. Verifique os IDs informados.',
+                    dados: null
+                });
+            }
+
             return response.status(500).json({
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
@@ -94,10 +125,27 @@ module.exports = {
         }
     },
 
+
     async editarSeguindo(request, response) {
         try {
-            const { Us_ID: id } = request.params;
-            const { Us_ID, Seguindo } = request.body;
+            const { idUsuario, idSeguindo } = request.params;
+            const { Seguindo } = request.body;
+
+            if (!Seguindo) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'O ID do novo usuário seguido é obrigatório.',
+                    dados: null
+                });
+            }
+
+            if (Number(idUsuario) === Number(Seguindo)) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Um usuário não pode seguir a si mesmo.',
+                    dados: null
+                });
+            }
 
             const sql = `
                 UPDATE SEGUINDO
@@ -108,30 +156,60 @@ module.exports = {
 
             const values = [
                 Seguindo,
-                Us_ID,
-                id
+                idUsuario,
+                idSeguindo
             ];
 
             const [result] = await db.query(sql, values);
 
             if (result.affectedRows === 0) {
-                return response.status(404).json({
-                    sucesso: false,
-                    mensagem: 'Vínculo não encontrado.',
-                    dados: null
-                });
+                const sqlVerificar = `
+                    SELECT Us_ID
+                    FROM SEGUINDO
+                    WHERE Us_ID = ?
+                    AND Seguindo = ?
+                `;
+
+                const [rows] = await db.query(sqlVerificar, [
+                    idUsuario,
+                    idSeguindo
+                ]);
+
+                if (rows.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: 'Vínculo não encontrado.',
+                        dados: null
+                    });
+                }
             }
 
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Seguindo editado com sucesso.',
                 dados: {
-                    Us_ID,
+                    Us_ID: idUsuario,
                     Seguindo
                 }
             });
 
         } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return response.status(409).json({
+                    sucesso: false,
+                    mensagem: 'Este vínculo já existe.',
+                    dados: null
+                });
+            }
+
+            if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Usuário não encontrado. Verifique o ID informado.',
+                    dados: null
+                });
+            }
+
             return response.status(500).json({
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
@@ -140,9 +218,10 @@ module.exports = {
         }
     },
 
+
     async apagarSeguindo(request, response) {
         try {
-            const { id, seguindo } = request.params;
+            const { idUsuario, idSeguindo } = request.params;
 
             const sql = `
                 DELETE FROM SEGUINDO
@@ -150,7 +229,10 @@ module.exports = {
                 AND Seguindo = ?
             `;
 
-            const values = [id, seguindo];
+            const values = [
+                idUsuario,
+                idSeguindo
+            ];
 
             const [result] = await db.query(sql, values);
 
@@ -177,7 +259,7 @@ module.exports = {
         }
     },
 
-    // 1. Lista os usuários seguidos com seus nomes
+
     async listarSeguindoDetalhado(request, response) {
         try {
             const { id } = request.params;
@@ -203,7 +285,7 @@ module.exports = {
                 mensagem: rows.length > 0
                     ? 'Lista de usuários seguidos encontrada com sucesso.'
                     : 'Nenhum usuário seguido encontrado.',
-                nItens: rows.length,
+                itens: rows.length,
                 dados: rows
             });
 
@@ -216,7 +298,7 @@ module.exports = {
         }
     },
 
-    // 2. Lista os seguidores de determinado usuário
+
     async listarSeguidores(request, response) {
         try {
             const { id } = request.params;
@@ -239,7 +321,7 @@ module.exports = {
                 mensagem: rows.length > 0
                     ? 'Lista de seguidores encontrada com sucesso.'
                     : 'Nenhum seguidor encontrado.',
-                nItens: rows.length,
+                itens: rows.length,
                 dados: rows
             });
 
@@ -252,7 +334,7 @@ module.exports = {
         }
     },
 
-    // 3. Conta quantas pessoas cada usuário segue
+
     async listarQuantidadeSeguindo(request, response) {
         try {
             const sql = `
@@ -272,7 +354,7 @@ module.exports = {
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Quantidade de usuários seguidos consultada com sucesso.',
-                nItens: rows.length,
+                itens: rows.length,
                 dados: rows
             });
 
@@ -285,7 +367,7 @@ module.exports = {
         }
     },
 
-    // 4. Conta quantos seguidores cada usuário possui
+
     async listarQuantidadeSeguidores(request, response) {
         try {
             const sql = `
@@ -305,7 +387,7 @@ module.exports = {
             return response.status(200).json({
                 sucesso: true,
                 mensagem: 'Quantidade de seguidores consultada com sucesso.',
-                nItens: rows.length,
+                itens: rows.length,
                 dados: rows
             });
 

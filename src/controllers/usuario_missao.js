@@ -4,9 +4,7 @@ const db = require('../database/connection');
 module.exports = {
 
     async listarUsuarioMissoes(request, response) {
-
         try {
-
             const sql = `
                 SELECT
                     Us_ID,
@@ -19,39 +17,38 @@ module.exports = {
             const [rows] = await db.query(sql);
 
             return response.status(200).json({
-
                 sucesso: true,
                 mensagem: 'Lista de usuários e missões.',
                 itens: rows.length,
                 dados: rows
-
             });
 
         } catch (error) {
-
             return response.status(500).json({
-
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
-
             });
-
         }
-
     },
 
 
     async cadastrarUsuarioMissao(request, response) {
-
         try {
-
             const {
                 Us_ID,
                 Ms_ID,
                 Um_Status,
                 Um_Dtconclusao
             } = request.body;
+
+            if (!Us_ID || !Ms_ID || !Um_Status) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'ID do usuário, ID da missão e status são obrigatórios.',
+                    dados: null
+                });
+            }
 
             const sql = `
                 INSERT INTO USUARIO_MISSAO (
@@ -67,138 +64,165 @@ module.exports = {
                 Us_ID,
                 Ms_ID,
                 Um_Status,
-                Um_Dtconclusao
+                Um_Dtconclusao ?? null
             ];
 
             const [result] = await db.query(sql, values);
 
-            const dados = {
-                Us_ID,
-                Ms_ID,
+            return response.status(201).json({
+                sucesso: true,
+                mensagem: 'Cadastro de usuário na missão realizado.',
+                dados: {
+                    Us_ID,
+                    Ms_ID,
+                    Um_Status,
+                    Um_Dtconclusao: Um_Dtconclusao ?? null
+                }
+            });
+
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return response.status(409).json({
+                    sucesso: false,
+                    mensagem: 'Este usuário já está vinculado a esta missão.',
+                    dados: null
+                });
+            }
+
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
+        }
+    },
+
+
+    async editarUsuarioMissao(request, response) {
+        try {
+            const {
+                Um_Status,
+                Um_Dtconclusao
+            } = request.body;
+
+            const { idUsuario, idMissao } = request.params;
+
+            const campos = {
                 Um_Status,
                 Um_Dtconclusao
             };
 
-            return response.status(201).json({
+            const camposAtualizar = [];
+            const values = [];
 
+            for (const campo in campos) {
+                if (campos[campo] !== undefined) {
+                    camposAtualizar.push(`${campo} = ?`);
+                    values.push(campos[campo]);
+                }
+            }
+
+            if (camposAtualizar.length === 0) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'Nenhum campo foi informado para atualização.',
+                    dados: null
+                });
+            }
+
+            const sql = `
+                UPDATE USUARIO_MISSAO
+                SET ${camposAtualizar.join(', ')}
+                WHERE Us_ID = ?
+                AND Ms_ID = ?
+            `;
+
+            values.push(idUsuario, idMissao);
+
+            const [result] = await db.query(sql, values);
+
+            if (result.affectedRows === 0) {
+                const sqlVerificar = `
+                    SELECT Us_ID
+                    FROM USUARIO_MISSAO
+                    WHERE Us_ID = ?
+                    AND Ms_ID = ?
+                `;
+
+                const [rows] = await db.query(sqlVerificar, [
+                    idUsuario,
+                    idMissao
+                ]);
+
+                if (rows.length === 0) {
+                    return response.status(404).json({
+                        sucesso: false,
+                        mensagem: 'Vínculo entre usuário e missão não encontrado.',
+                        dados: null
+                    });
+                }
+            }
+
+            return response.status(200).json({
                 sucesso: true,
-                mensagem: 'Cadastro de usuário na missão realizado.',
-                dados: dados
-
+                mensagem: `Missão ${idMissao} do usuário ${idUsuario} editada com sucesso!`,
+                dados: {
+                    Us_ID: idUsuario,
+                    Ms_ID: idMissao,
+                    Um_Status: Um_Status,
+                    Um_Dtconclusao: Um_Dtconclusao
+                }
             });
 
         } catch (error) {
-
             return response.status(500).json({
-
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
-
             });
-
         }
-
     },
 
 
-   
-async editarUsuarioMissao(request, response) {
-    try {
-        const {
-            Us_ID,
-            Um_Status,
-            Um_Dtconclusao
-        } = request.body;
+    async apagarUsuarioMissao(request, response) {
+        try {
+            const { idUsuario, idMissao } = request.params;
 
-        const { id } = request.params;
+            const sql = `
+                DELETE FROM USUARIO_MISSAO
+                WHERE Us_ID = ?
+                AND Ms_ID = ?
+            `;
 
-        const sql = `
-            UPDATE USUARIO_MISSAO
-            SET
-                Um_Status = ?,
-                Um_Dtconclusao = ?
-            WHERE Us_ID = ?
-            AND Ms_ID = ?
-        `;
+            const values = [idUsuario, idMissao];
 
-        const values = [
-            Um_Status,
-            Um_Dtconclusao,
-            Us_ID,
-            id
-        ];
+            const [result] = await db.query(sql, values);
 
-        const [result] = await db.query(sql, values);
-
-        if (result.affectedRows === 0) {
-            return response.status(404).json({
-                sucesso: false,
-                mensagem: 'Vínculo entre usuário e missão não encontrado.',
-                dados: null
-            });
-        }
-
-        return response.status(200).json({
-            sucesso: true,
-            mensagem: `Missão ${id} editada com sucesso!`,
-            dados: {
-                Us_ID,
-                Ms_ID: id,
-                Um_Status,
-                Um_Dtconclusao
+            if (result.affectedRows === 0) {
+                return response.status(404).json({
+                    sucesso: false,
+                    mensagem: 'Vínculo entre usuário e missão não encontrado.',
+                    dados: null
+                });
             }
-        });
 
-    } catch (error) {
-        return response.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro na requisição.',
-            dados: error.message
-        });
-    }
-},
-
-
-
-
-async apagarUsuarioMissao(request, response) {
-    try {
-        const { id } = request.params;
-
-        const sql = `
-            DELETE FROM USUARIO_MISSAO
-            WHERE Ms_ID = ?
-        `;
-
-        const values = [id];
-
-        const [result] = await db.query(sql, values);
-
-        if (result.affectedRows === 0) {
-            return response.status(404).json({
-                sucesso: false,
-                mensagem: `Missão ${id} não encontrada.`,
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Vínculo entre usuário e missão removido com sucesso.',
                 dados: null
             });
+
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+            });
         }
+    },
 
-        return response.status(200).json({
-            sucesso: true,
-            mensagem: `Missão ${id} removida com sucesso.`,
-            dados: null
-        });
 
-    } catch (error) {
-        return response.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro na requisição.',
-            dados: error.message
-        });
-    }
-},
-
-async listarUsuarioMissoesDetalhado(request, response) {
+    async listarUsuarioMissoesDetalhado(request, response) {
         try {
             const sql = `
                 SELECT
@@ -235,7 +259,7 @@ async listarUsuarioMissoesDetalhado(request, response) {
         }
     },
 
-    // 2. Lista todas as missões de um usuário específico
+
     async listarMissoesUsuario(request, response) {
         try {
             const { id } = request.params;
@@ -276,7 +300,7 @@ async listarUsuarioMissoesDetalhado(request, response) {
         }
     },
 
-    // 3. Lista os usuários vinculados a uma missão específica
+
     async listarUsuariosMissao(request, response) {
         try {
             const { id } = request.params;
@@ -317,7 +341,7 @@ async listarUsuarioMissoesDetalhado(request, response) {
         }
     },
 
-    // 4. Conta quantas missões cada usuário possui
+
     async listarQuantidadeMissoesUsuario(request, response) {
         try {
             const sql = `
@@ -349,6 +373,5 @@ async listarUsuarioMissoesDetalhado(request, response) {
             });
         }
     }
-
 
 };
