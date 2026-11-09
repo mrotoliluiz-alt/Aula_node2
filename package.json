@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev":"nodemon index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,14 +21,16 @@
   },
   "homepage": "https://github.com/mrotoliluiz-alt/Aula_node2#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "fs-extra": "^11.4.1",
+    "multer": "^2.5.0",
     "mysql2": "^3.23.3",
     "nodemon": "^3.1.14"
   },
-
   "devDependencies": {
-    "nodemon":"^3.0.1"
+    "nodemon": "^3.0.1"
   }
 }
