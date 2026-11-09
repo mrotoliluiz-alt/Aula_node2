@@ -103,11 +103,6 @@ router.get('/obras/favoritas', obrasController.listarObrasFavoritas);
 
 router.get('/obras/mais-comentadas', obrasController.listarObrasMaisComentadas);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 9f2ac859035643c5484901fb6c5815cd58acac6f
-
 
 const missoesController = require('../controllers/missoes');
 

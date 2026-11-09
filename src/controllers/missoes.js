@@ -55,11 +55,15 @@ module.exports = {
             } = request.body;
 
             if (!Ms_titulo || !Ms_tipo || Ms_recompensaXP === undefined) {
+
                 return response.status(400).json({
+
                     sucesso: false,
                     mensagem: 'Informe o título, a recompensa XP e o tipo da missão.',
                     dados: null
+
                 });
+
             }
 
             const sql = `
@@ -84,7 +88,7 @@ module.exports = {
             const dados = {
                 Ms_ID: result.insertId,
                 Ms_titulo,
-                Ms_descricao,
+                Ms_descricao: Ms_descricao ?? null,
                 Ms_recompensaXP,
                 Ms_tipo
             };
@@ -131,11 +135,15 @@ module.exports = {
                 Ms_recompensaXP === undefined &&
                 Ms_tipo === undefined
             ) {
+
                 return response.status(400).json({
+
                     sucesso: false,
                     mensagem: 'Informe pelo menos um campo para edição.',
                     dados: null
+
                 });
+
             }
 
             const campos = [];
@@ -179,6 +187,7 @@ module.exports = {
                 );
 
                 if (rows.length === 0) {
+
                     return response.status(404).json({
 
                         sucesso: false,
@@ -186,6 +195,7 @@ module.exports = {
                         dados: null
 
                     });
+
                 }
 
             }
@@ -266,12 +276,14 @@ module.exports = {
 
         }
 
-<<<<<<< HEAD
-    }, 
+    },
+
 
     // 1. Lista os vínculos com os dados do usuário e da missão
     async listarUsuarioMissoesDetalhado(request, response) {
+
         try {
+
             const sql = `
                 SELECT
                     UM.Us_ID,
@@ -282,7 +294,36 @@ module.exports = {
                     M.Ms_recompensaXP AS Recompensa_XP,
                     UM.Um_Status,
                     UM.Um_Dtconclusao
-=======
+                FROM USUARIO_MISSAO UM
+                INNER JOIN USUARIO U
+                    ON UM.Us_ID = U.Us_ID
+                INNER JOIN MISSOES M
+                    ON UM.Ms_ID = M.Ms_ID
+            `;
+
+            const [rows] = await db.query(sql);
+
+            return response.status(200).json({
+
+                sucesso: true,
+                mensagem: 'Lista detalhada de usuários e missões consultada com sucesso.',
+                itens: rows.length,
+                dados: rows
+
+            });
+
+        } catch (error) {
+
+            return response.status(500).json({
+
+                sucesso: false,
+                mensagem: 'Erro na requisição.',
+                dados: error.message
+
+            });
+
+        }
+
     },
 
 
@@ -298,7 +339,7 @@ module.exports = {
                     Ms_recompensaXP,
                     Ms_tipo
                 FROM MISSOES
-                ORDER BY Ms_recompensaXP DESC;
+                ORDER BY Ms_recompensaXP DESC
             `;
 
             const [rows] = await db.query(sql);
@@ -342,7 +383,7 @@ module.exports = {
                     Ms_recompensaXP,
                     Ms_tipo
                 FROM MISSOES
-                WHERE Ms_titulo LIKE ?;
+                WHERE Ms_titulo LIKE ?
             `;
 
             const values = [`%${titulo ?? ''}%`];
@@ -388,7 +429,7 @@ module.exports = {
                     Ms_recompensaXP,
                     Ms_tipo
                 FROM MISSOES
-                WHERE Ms_tipo = ?;
+                WHERE Ms_tipo = ?
             `;
 
             const values = [tipo];
@@ -432,40 +473,44 @@ module.exports = {
                     M.Ms_recompensaXP AS Recompensa_XP,
                     UM.Um_Status AS Status,
                     UM.Um_Dtconclusao AS Data_Conclusao
->>>>>>> 9f2ac859035643c5484901fb6c5815cd58acac6f
                 FROM USUARIO_MISSAO UM
                 INNER JOIN USUARIO U
                     ON UM.Us_ID = U.Us_ID
                 INNER JOIN MISSOES M
-<<<<<<< HEAD
                     ON UM.Ms_ID = M.Ms_ID
-=======
-                    ON UM.Ms_ID = M.Ms_ID;
->>>>>>> 9f2ac859035643c5484901fb6c5815cd58acac6f
             `;
 
             const [rows] = await db.query(sql);
 
             return response.status(200).json({
-<<<<<<< HEAD
+
                 sucesso: true,
-                mensagem: 'Lista detalhada de usuários e missões consultada com sucesso.',
+                mensagem: 'Lista de missões dos usuários.',
                 itens: rows.length,
                 dados: rows
+
             });
 
         } catch (error) {
+
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
+
         }
+
     },
+
 
     // 2. Lista todas as missões de um usuário específico
     async listarMissoesUsuario(request, response) {
+
         try {
+
             const { id } = request.params;
 
             const sql = `
@@ -487,26 +532,36 @@ module.exports = {
             const [rows] = await db.query(sql, [id]);
 
             return response.status(200).json({
+
                 sucesso: true,
                 mensagem: rows.length > 0
                     ? 'Missões do usuário encontradas com sucesso.'
                     : 'Nenhuma missão encontrada para este usuário.',
                 itens: rows.length,
                 dados: rows
+
             });
 
         } catch (error) {
+
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
+
         }
+
     },
+
 
     // 3. Lista os usuários vinculados a uma missão específica
     async listarUsuariosMissao(request, response) {
+
         try {
+
             const { id } = request.params;
 
             const sql = `
@@ -528,26 +583,36 @@ module.exports = {
             const [rows] = await db.query(sql, [id]);
 
             return response.status(200).json({
+
                 sucesso: true,
                 mensagem: rows.length > 0
                     ? 'Usuários vinculados à missão encontrados com sucesso.'
                     : 'Nenhum usuário encontrado nesta missão.',
                 itens: rows.length,
                 dados: rows
+
             });
 
         } catch (error) {
+
             return response.status(500).json({
+
                 sucesso: false,
                 mensagem: 'Erro na requisição.',
                 dados: error.message
+
             });
+
         }
+
     },
+
 
     // 4. Conta quantas missões cada usuário possui
     async listarQuantidadeMissoesUsuario(request, response) {
+
         try {
+
             const sql = `
                 SELECT
                     U.Us_ID,
@@ -563,25 +628,11 @@ module.exports = {
             const [rows] = await db.query(sql);
 
             return response.status(200).json({
+
                 sucesso: true,
                 mensagem: 'Quantidade de missões por usuário consultada com sucesso.',
                 itens: rows.length,
                 dados: rows
-            });
-
-        } catch (error) {
-            return response.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-            });
-        }
-=======
-
-                sucesso: true,
-                mensagem: 'Lista de missões dos usuários.',
-                itens: rows.length,
-                dados: rows
 
             });
 
@@ -597,7 +648,6 @@ module.exports = {
 
         }
 
->>>>>>> 9f2ac859035643c5484901fb6c5815cd58acac6f
     }
 
 };
