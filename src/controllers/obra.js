@@ -19,7 +19,7 @@ module.exports = {
 
     async listarObras(request, response) {
         try {
-            const { titulo, page = 1, limit = 5 } = request.query;
+            const { titulo, page = 1, limit = 9 } = request.query;
 
             const pagina = parseInt(page);
             const limite = parseInt(limit);

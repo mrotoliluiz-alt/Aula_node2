@@ -391,7 +391,6 @@ module.exports = {
     // LOGIN
     async login(request, response) {
         try {
-
             const { email, senha } = request.query;
 
             const sql = `
@@ -410,6 +409,9 @@ module.exports = {
 
             const [rows] = await db.query(sql, values);
 
+            console.log("E-mail recebido:", email);
+            console.log("Quantidade de usuários encontrados:", rows.length);
+
             if (rows.length < 1) {
                 return response.status(403).json({
                     sucesso: false,
@@ -423,6 +425,8 @@ module.exports = {
                 senha,
                 rows[0].Us_senha
             );
+
+            console.log("Senha válida:", senhaValida);
 
             if (!senhaValida) {
                 return response.status(403).json({
