@@ -69,13 +69,8 @@ module.exports = {
                 US_nome,
                 Us_email,
                 Us_senha,
-                Us_biografia,
-                Us_SV,
-                Us_nivel,
-                Us_XP_total,
-                Us_dt_ultimo_acesso,
-                Us_adm,
-                Us_imagem
+                Us_imagem,
+                Us_nivel
             } = request.body;
 
             // Recebe a imagem enviada pelo formulário
@@ -123,32 +118,23 @@ module.exports = {
             const senhaCriptografada = await bcrypt.hash(Us_senha, salt);
 
             const sql = `
-                INSERT INTO USUARIO (
-                    US_nome,
-                    Us_email,
-                    Us_senha,
-                    Us_biografia,
-                    Us_SV,
-                    Us_nivel,
-                    Us_XP_total,
-                    Us_dt_ultimo_acesso,
-                    Us_adm,
-                    Us_imagem
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
+            INSERT INTO USUARIO (
+                US_nome,
+                Us_email,
+                Us_senha,
+                Us_imagem,
+                Us_nivel,
+                Us_dt_ultimo_acesso
+            )
+            VALUES (?, ?, ?, ?, ?, NOW())
+        `;
 
             const values = [
                 US_nome,
                 Us_email,
                 senhaCriptografada,
-                Us_biografia ?? null,
-                Us_SV ?? 0,
-                Us_nivel ?? 1,
-                Us_XP_total ?? 0,
-                Us_dt_ultimo_acesso ?? null,
-                Us_adm ?? 0,
-                imagem
+                imagem,
+                1
             ];
 
             const [result] = await db.query(sql, values);
