@@ -38,7 +38,7 @@ module.exports = {
                 Us_imagem: gerarUrl(
                     usuario.Us_imagem,
                     'usuarios',
-                    'sem.jpg'
+                    'adm-01.jpg'
                 )
             }));
 
