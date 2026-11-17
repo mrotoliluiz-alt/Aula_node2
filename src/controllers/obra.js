@@ -145,7 +145,7 @@ module.exports = {
                     Ob_titulo,
                     Ob_sinopse ?? null,
                     Ob_genero ?? null,
-                    Ob_status ?? null,
+                    Ob_status ?? 1,
                     Ob_imagem ?? null
                 ]
             );
