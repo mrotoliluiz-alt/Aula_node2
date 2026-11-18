@@ -182,101 +182,99 @@ module.exports = {
     },
 
 
-    async editarObra(request, response) {
-        try {
-            const { id } = request.params;
+   async editarObra(request, response) {
+    try {
+        const { id } = request.params;
 
-            const {
+        const {
+            Us_ID,
+            Ob_titulo,
+            Ob_sinopse,
+            Ob_genero,
+            Ob_status
+        } = request.body;
+
+        // Busca a imagem que já está cadastrada
+        const [obraExistente] = await db.query(
+            'SELECT Ob_imagem FROM OBRA WHERE Ob_ID = ?',
+            [id]
+        );
+
+        if (obraExistente.length === 0) {
+            return response.status(404).json({
+                sucesso: false,
+                mensagem: `Obra ${id} não encontrada.`,
+                dados: null
+            });
+        }
+
+        // Se enviar uma nova imagem, utiliza ela.
+        // Caso contrário, mantém a imagem anterior.
+        const imagemAtualizada = request.file
+            ? request.file.filename
+            : obraExistente[0].Ob_imagem;
+
+        const campos = {
+            Us_ID,
+            Ob_titulo,
+            Ob_sinopse,
+            Ob_genero,
+            Ob_status,
+            Ob_imagem: imagemAtualizada
+        };
+
+        const camposAtualizar = [];
+        const values = [];
+
+        for (const campo in campos) {
+            if (campos[campo] !== undefined) {
+                camposAtualizar.push(`${campo} = ?`);
+                values.push(campos[campo]);
+            }
+        }
+
+        const sql = `
+            UPDATE OBRA
+            SET ${camposAtualizar.join(', ')}
+            WHERE Ob_ID = ?
+        `;
+
+        values.push(id);
+
+        await db.query(sql, values);
+
+        // Busca a obra atualizada
+        const [obraAtualizada] = await db.query(
+            `SELECT
+                Ob_ID,
                 Us_ID,
                 Ob_titulo,
                 Ob_sinopse,
                 Ob_genero,
                 Ob_status,
                 Ob_imagem
-            } = request.body;
+            FROM OBRA
+            WHERE Ob_ID = ?`,
+            [id]
+        );
 
-            const imagemAtualizada = request.file
-            ? request.file.filename
-            : Ob_imagem;
-
-            const campos = {
-                Us_ID,
-                Ob_titulo,
-                Ob_sinopse,
-                Ob_genero,
-                Ob_status,
-                Ob_imagem: imagemAtualizada
-            };
-
-            const camposAtualizar = [];
-            const values = [];
-
-            for (const campo in campos) {
-                if (campos[campo] !== undefined) {
-                    camposAtualizar.push(`${campo} = ?`);
-                    values.push(campos[campo]);
-                }
+        return response.status(200).json({
+            sucesso: true,
+            mensagem: 'Obra editada com sucesso.',
+            dados: {
+                ...obraAtualizada[0],
+                Ob_imagem: gerarUrlObra(obraAtualizada[0].Ob_imagem)
             }
+        });
 
-            if (camposAtualizar.length === 0) {
-                return response.status(400).json({
-                    sucesso: false,
-                    mensagem: 'Nenhum campo foi informado para atualização.',
-                    dados: null
-                });
-            }
-
-            const sql = `
-                UPDATE OBRA
-                SET ${camposAtualizar.join(', ')}
-                WHERE Ob_ID = ?
-            `;
-
-            values.push(id);
-
-            const [resultado] = await db.query(sql, values);
-
-            if (resultado.affectedRows === 0) {
-                const [rows] = await db.query(
-                    'SELECT Ob_ID FROM OBRA WHERE Ob_ID = ?',
-                    [id]
-                );
-
-                if (rows.length === 0) {
-                    return response.status(404).json({
-                        sucesso: false,
-                        mensagem: `Obra ${id} não encontrada.`,
-                        dados: null
-                    });
-                }
-            }
-
-            return response.status(200).json({
-                sucesso: true,
-                mensagem: 'Obra editada com sucesso.',
-                dados: {
-                    Ob_ID: id,
-                    camposAtualizados: camposAtualizar.length
-                }
-            });
-
-        } catch (error) {
-            if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-                return response.status(400).json({
-                    sucesso: false,
-                    mensagem: 'Autor não encontrado. Verifique o ID informado.',
-                    dados: null
-                });
-            }
-
-            return response.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-            });
-        }
-    },
-
+    } catch (error) {
+        return response.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro na requisição.',
+            dados: error.message
+        });
+    }
+},
 
     async apagarObra(request, response) {
         try {
@@ -486,7 +484,13 @@ module.exports = {
                     ? 'Obras do usuário encontradas com sucesso.'
                     : 'Nenhuma obra encontrada para este usuário.',
                 nItens: rows.length,
-                dados: rows
+
+                 dados: rows.map(obra => ({
+                ...obra,
+                Ob_imagem: gerarUrlObra(obra.Ob_imagem)
+            }))
+
+                
             });
 
         } catch (error) {
@@ -630,44 +634,6 @@ module.exports = {
         }
     },
 
-    // 2. LISTAR OBRAS DE UM USUÁRIO
-    async listarObrasUsuario(request, response) {
-        try {
-            const { id } = request.params;
-
-            const sql = `
-                SELECT
-                    Ob_ID,
-                    Us_ID,
-                    Ob_titulo,
-                    Ob_sinopse,
-                    Ob_genero,
-                    Ob_status,
-                    Ob_imagem
-                FROM OBRA
-                WHERE Us_ID = ?
-                ORDER BY Ob_ID
-            `;
-
-            const [rows] = await db.query(sql, [id]);
-
-            return response.status(200).json({
-                sucesso: true,
-                mensagem: rows.length > 0
-                    ? 'Obras do usuário encontradas com sucesso.'
-                    : 'Nenhuma obra encontrada para este usuário.',
-                nItens: rows.length,
-                dados: rows
-            });
-
-        } catch (error) {
-            return response.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro na requisição.',
-                dados: error.message
-            });
-        }
-    },
 
     // 3. LISTAR OBRAS SALVAS/FAVORITADAS PELOS USUÁRIOS
     async listarObrasFavoritas(request, response) {
@@ -696,7 +662,10 @@ module.exports = {
                 sucesso: true,
                 mensagem: 'Obras salvas pelos usuários consultadas com sucesso.',
                 nItens: rows.length,
-                dados: rows
+                dados: rows.map(obra => ({
+    ...obra,
+    Ob_imagem: gerarUrlObra(obra.Ob_imagem)
+}))
             });
 
         } catch (error) {
@@ -733,7 +702,10 @@ module.exports = {
                 sucesso: true,
                 mensagem: 'Obras organizadas pela quantidade de comentários.',
                 nItens: rows.length,
-                dados: rows
+                dados: rows.map(obra => ({
+    ...obra,
+    Ob_imagem: gerarUrlObra(obra.Ob_imagem)
+}))
             });
 
         } catch (error) {
