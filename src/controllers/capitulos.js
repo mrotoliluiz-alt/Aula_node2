@@ -51,7 +51,7 @@ module.exports = {
                 Cap_conteudo
             } = request.body;
 
-            if (!Ob_ID || Cap_ordem == null || !Cap_titulo || !Cap_conteudo) {
+           if (!Ob_ID || Cap_ordem == null || !Cap_titulo || Cap_conteudo == null) {
                 return response.status(400).json({
                     sucesso: false,
                     mensagem: 'Informe a obra, a ordem, o título e o conteúdo do capítulo.',
