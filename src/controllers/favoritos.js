@@ -60,7 +60,7 @@ module.exports = {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
-                Ob_PagAtual
+                Ob_PagAtual ?? 0
             ];
 
             const [result] = await db.query(sql, values);
@@ -69,7 +69,7 @@ module.exports = {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
-                Ob_PagAtual
+                Ob_PagAtual: Ob_PagAtual ?? 0
             };
 
             return response.status(201).json({
