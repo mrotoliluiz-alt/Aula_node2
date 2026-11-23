@@ -386,7 +386,10 @@ module.exports = {
                     Us_email,
                     Us_senha,
                     Us_adm,
-                    Us_imagem
+                    Us_imagem,
+                    Us_nivel,
+                    Us_XP_total,
+                    Us_dt_ultimo_acesso
                 FROM USUARIO
                 WHERE Us_email = ?
             `;
@@ -432,7 +435,10 @@ module.exports = {
                     usuario.Us_imagem,
                     'usuarios',
                     'sem.jpg'
-                )
+                ),
+                nivel: usuario.Us_nivel,
+                xp_total: usuario.Us_XP_total,
+                ultimo_acesso: usuario.Us_dt_ultimo_acesso
             };
 
             return response.status(200).json({
