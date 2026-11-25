@@ -44,8 +44,7 @@ module.exports = {
 
             if (
                 !chat_remetente ||
-                !chat_destinatario ||
-                !chat_mensagem
+                !chat_destinatario
             ) {
                 return response.status(400).json({
                     sucesso: false,
