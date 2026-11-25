@@ -6,7 +6,7 @@ module.exports = {
         try {
 
             const sql = `SELECT 
-                Ob_ID, Us_ID, Fav_status, Ob_PagAtual
+                Ob_ID, Us_ID, Fav_status
                 FROM FAVORITOS_SALVOS`;
 
             const [rows] = await db.query(sql);
@@ -35,7 +35,6 @@ module.exports = {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
-                Ob_PagAtual
             } = request.body;
 
             if (!Us_ID || !Ob_ID) {
@@ -50,17 +49,15 @@ module.exports = {
                 INSERT INTO FAVORITOS_SALVOS (
                     Us_ID,
                     Ob_ID,
-                    Fav_status,
-                    Ob_PagAtual
+                    Fav_status
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?,)
             `;
 
             const values = [
                 Us_ID,
                 Ob_ID,
-                Fav_status,
-                Ob_PagAtual ?? 0
+                Fav_status
             ];
 
             const [result] = await db.query(sql, values);
@@ -69,7 +66,6 @@ module.exports = {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
-                Ob_PagAtual: Ob_PagAtual ?? 0
             };
 
             return response.status(201).json({
@@ -103,8 +99,7 @@ module.exports = {
 
             const {
                 Us_ID,
-                Fav_status,
-                Ob_PagAtual
+                Fav_status
             } = request.body;
 
             const { id } = request.params;
@@ -120,14 +115,12 @@ module.exports = {
             const sql = `
                 UPDATE FAVORITOS_SALVOS
                 SET
-                    Fav_status = ?,
-                    Ob_PagAtual = ?
+                    Fav_status = ?
                 WHERE Ob_ID = ? AND Us_ID = ?
             `;
 
             const values = [
                 Fav_status,
-                Ob_PagAtual,
                 id,
                 Us_ID
             ];
@@ -158,7 +151,6 @@ module.exports = {
                     Ob_ID: id,
                     Us_ID,
                     Fav_status,
-                    Ob_PagAtual
                 }
             });
 
@@ -229,8 +221,7 @@ module.exports = {
                     O.Ob_titulo AS Obra,
                     O.Ob_genero AS Genero,
                     U.US_nome AS Autor,
-                    F.Fav_status,
-                    F.Ob_PagAtual
+                    F.Fav_status
                 FROM FAVORITOS_SALVOS F
                 INNER JOIN OBRA O
                     ON F.Ob_ID = O.Ob_ID
@@ -267,8 +258,7 @@ module.exports = {
                 SELECT
                     Ob_ID,
                     Us_ID,
-                    Fav_status,
-                    Ob_PagAtual
+                    Fav_status
                 FROM FAVORITOS_SALVOS
                 WHERE Us_ID = ?;
             `;
@@ -305,8 +295,7 @@ module.exports = {
                     U.Us_ID,
                     U.US_nome,
                     F.Ob_ID,
-                    F.Fav_status,
-                    F.Ob_PagAtual
+                    F.Fav_status
                 FROM FAVORITOS_SALVOS F
                 INNER JOIN USUARIO U
                     ON F.Us_ID = U.Us_ID
@@ -344,8 +333,7 @@ module.exports = {
                 SELECT
                     Ob_ID,
                     Us_ID,
-                    Fav_status,
-                    Ob_PagAtual
+                    Fav_status
                 FROM FAVORITOS_SALVOS
                 WHERE Fav_status = ?;
             `;
