@@ -36,6 +36,7 @@ module.exports = {
                 Ob_ID,
                 Fav_status,
             } = request.body;
+            const Ob_PagAtual = Number(request.body.Ob_PagAtual ?? 0);
 
             if (!Us_ID || !Ob_ID) {
                 return response.status(400).json({
@@ -45,19 +46,29 @@ module.exports = {
                 });
             }
 
+            if (!Number.isInteger(Ob_PagAtual) || Ob_PagAtual < 0) {
+                return response.status(400).json({
+                    sucesso: false,
+                    mensagem: 'A página atual deve ser um inteiro igual ou maior que zero.',
+                    dados: null
+                });
+            }
+
             const sql = `
                 INSERT INTO FAVORITOS_SALVOS (
                     Us_ID,
                     Ob_ID,
-                    Fav_status
+                    Fav_status,
+                    Ob_PagAtual
                 )
-                VALUES (?, ?, ?,)
+                VALUES (?, ?, ?, ?)
             `;
 
             const values = [
                 Us_ID,
                 Ob_ID,
-                Fav_status
+                Fav_status,
+                Ob_PagAtual
             ];
 
             const [result] = await db.query(sql, values);
@@ -66,6 +77,7 @@ module.exports = {
                 Us_ID,
                 Ob_ID,
                 Fav_status,
+                Ob_PagAtual,
             };
 
             return response.status(201).json({

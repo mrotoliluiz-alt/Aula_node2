@@ -143,8 +143,8 @@ module.exports = {
                 [
                     Us_ID,
                     Ob_titulo,
-                    Ob_sinopse ?? null,
-                    Ob_genero ?? null,
+                    Ob_sinopse,
+                    Ob_genero,
                     Ob_status ?? 1,
                     Ob_imagem ?? null
                 ]
@@ -157,8 +157,8 @@ module.exports = {
                     Ob_ID: resultado.insertId,
                     Us_ID,
                     Ob_titulo,
-                    Ob_sinopse: Ob_sinopse ?? null,
-                    Ob_genero: Ob_genero ?? null,
+                    Ob_sinopse: Ob_sinopse,
+                    Ob_genero: Ob_genero,
                     Ob_status: Ob_status ?? null,
                     Ob_imagem: gerarUrlObra(Ob_imagem)
                 }
